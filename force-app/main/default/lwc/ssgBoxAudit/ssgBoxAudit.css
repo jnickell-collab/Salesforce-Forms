@@ -1,0 +1,110 @@
+/* Back to Top floating button */
+.ssg-back-to-top {
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    z-index: 1000;
+    background: #2563eb;
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    font-size: 1.3rem;
+    font-weight: bold;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+    cursor: pointer;
+    transition: background 0.2s, box-shadow 0.2s;
+    outline: none;
+}
+.ssg-back-to-top:hover {
+    background: #1e40af;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.22);
+}
+.ssg-box-yellow {
+    background: #fffbe6 !important;
+    border-color: #ffe066 !important;
+}
+.ssg-box-red {
+    background: #ffeaea !important;
+    border-color: #ff5c5c !important;
+}
+/* Professional, sleek, mobile-first styles for SSG_BoxAudit */
+.ssg-mobile-section {
+    padding: 1.1rem 1rem 1rem 1rem;
+    margin-bottom: 1.2rem;
+    background: linear-gradient(135deg, #f7fafc 60%, #e3e8ee 100%);
+    border-radius: 0.85rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07), 0 1.5px 4px rgba(0,0,0,0.03);
+    border: 1.5px solid #e0e6ed;
+    transition: box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+.ssg-mobile-section:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.07);
+    border-color: #b3b8c3;
+}
+.ssg-mobile-label {
+    font-weight: 600;
+    font-size: 1.04rem;
+    color: #2d3748;
+    margin-bottom: 0.13rem;
+    letter-spacing: 0.01em;
+    display: flex;
+    align-items: center;
+}
+.ssg-mobile-value {
+    font-size: 1.13rem;
+    color: #1a202c;
+    margin-left: 0.35em;
+    font-weight: 500;
+    word-break: break-word;
+}
+.ssg-mobile-s2k {
+    color: #3b82f6;
+    font-weight: 500;
+    margin-top: 0.1rem;
+}
+.ssg-mobile-section:not(:last-child) {
+    border-bottom: 2px solid #e2e8f0;
+}
+.ssg-mobile-section:last-child {
+    margin-bottom: 0.5rem;
+}
+.ssg-mobile-section h4 {
+    font-size: 1.08rem;
+    font-weight: 700;
+    color: #2563eb;
+    margin-bottom: 0.5rem;
+}
+.ssg-mobile-section .ssg-divider {
+    border-top: 1px solid #e2e8f0;
+    margin: 0.7rem 0 0.5rem 0;
+}
+.ssg-mobile-section .ssg-sku-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.2rem;
+    margin-bottom: 0.3rem;
+}
+.ssg-mobile-section .ssg-sku-row > div {
+    min-width: 120px;
+}
+.ssg-mobile-section .ssg-sku-row .ssg-mobile-label {
+    margin-bottom: 0;
+}
+.ssg-mobile-section .ssg-sku-row .ssg-mobile-value {
+    margin-left: 0.2em;
+}
+.ssg-mobile-section .ssg-sku-row .ssg-mobile-s2k {
+    color: #0ea5e9;
+}
+@media (min-width: 600px) {
+    .ssg-mobile-section {
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+}

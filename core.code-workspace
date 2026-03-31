@@ -1,0 +1,19 @@
+{
+  "folders": [
+    {
+      "path": "c:/Users/jnickell/Documents/SFProject/TheMasterProject"
+    }
+  ],
+  "settings": {
+    "eslint.workingDirectories": [
+      "c:/Users/jnickell/Documents/SFProject/TheMasterProject"
+    ],
+    "eslint.validate": [
+      "javascript",
+      "typescript"
+    ],
+    "eslint.options": {
+      "overrideConfigFile": "c:\\Users\\jnickell\\Documents\\SFProject\\TheMasterProject\\.eslintrc.json"
+    }
+  }
+}
