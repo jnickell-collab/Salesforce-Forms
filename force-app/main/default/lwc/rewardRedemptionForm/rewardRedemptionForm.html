@@ -1,334 +1,552 @@
 <template>
-    <!-- Success Modal -->
-    <template if:true={showSuccessModal}>
-        <div class="slds-backdrop slds-backdrop_open"></div>
-        <div class="slds-modal slds-fade-in-open">
-            <div class="slds-modal__container">
-                <div class="slds-modal__header slds-theme_success">
-                    <h2 class="slds-text-heading_medium" id="modal-heading-id">
-                        <lightning-icon icon-name="utility:success" size="small" class="slds-m-right_small"></lightning-icon>
-                        {modalHeading}
-                    </h2>
-                </div>
-                <div class="slds-modal__content slds-p-around_large">
-                    <p class="slds-m-bottom_small">{modalMessage}</p>
-                    <div class="slds-box slds-theme_shade slds-p-around_medium">
-                        <p><strong>PO Number:</strong> {successMessage.poNumber}</p>
-                        <p><strong>Customer:</strong> {successMessage.accountName}</p>
-                        <p><strong>Order Total:</strong> {modalOrderTotal}</p>
-                    </div>
-                    <p class="slds-m-top_large slds-text-color_weak slds-text-body_small">Redirecting to new order...</p>
-                </div>
-                <div class="slds-modal__footer slds-theme_default">
-                    <lightning-button variant="brand" label="Acknowledged" onclick={closeSuccessModal}></lightning-button>
-                </div>
-            </div>
+  <!-- Success Modal -->
+  <template if:true={showSuccessModal}>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+    <div class="slds-modal slds-fade-in-open">
+      <div class="slds-modal__container">
+        <div class="slds-modal__header slds-theme_success">
+          <h2 class="slds-text-heading_medium" id="modal-heading-id">
+            <lightning-icon
+              icon-name="utility:success"
+              size="small"
+              class="slds-m-right_small"
+            ></lightning-icon>
+            {modalHeading}
+          </h2>
         </div>
-    </template>
+        <div class="slds-modal__content slds-p-around_large">
+          <p class="slds-m-bottom_small">{modalMessage}</p>
+          <div class="slds-box slds-theme_shade slds-p-around_medium">
+            <p><strong>PO Number:</strong> {successMessage.poNumber}</p>
+            <p><strong>Customer:</strong> {successMessage.accountName}</p>
+            <p><strong>Order Total:</strong> {modalOrderTotal}</p>
+          </div>
+          <p class="slds-m-top_large slds-text-color_weak slds-text-body_small">
+            Redirecting to new order...
+          </p>
+        </div>
+        <div class="slds-modal__footer slds-theme_default">
+          <lightning-button
+            variant="brand"
+            label="Acknowledged"
+            onclick={closeSuccessModal}
+          ></lightning-button>
+        </div>
+      </div>
+    </div>
+  </template>
 
-    <lightning-card>
-        
-        <div class="slds-p-around_medium">
-            
-            <div class="customer-search-section">
-                <button
-                    type="button"
-                    class="hamburger-trigger"
-                    title="Open insights menu"
-                    aria-label="Open insights menu"
-                    aria-expanded={showInfoMenu}
-                    aria-controls="insights-panel"
-                    onclick={openInfoMenu}
-                    disabled={isInsightsDisabled}>
-                    <span class="hamburger-line"></span>
-                    <span class="hamburger-line"></span>
-                    <span class="hamburger-line"></span>
-                    <span class="slds-assistive-text">Open insights menu</span>
-                </button>
-                <div class="slds-is-relative customer-search-field">
-                    <lightning-input 
-                        type="search" 
-                        label="Search by Name or Customer ID" 
-                        placeholder="Type Account Name or Customer ID (XC_ExternalId__c)..."
-                        onkeypress={handleKeyPress}
-                        value={searchTerm}
-                        data-test-id="customer-search-input"
-                        data-debug="search-input"
-                        aria-label="Customer search input (Name or Customer ID)"></lightning-input>
-
-                <template if:true={showDropdown}>
-                    <div class="slds-box slds-theme_default slds-is-absolute" 
-                         style="z-index: 999; width: 100%; max-height: 300px; overflow-y: auto; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                        
-                        <template if:true={isSearching}>
-                            <div class="slds-p-around_small slds-grid slds-grid_align-center">
-                                <lightning-spinner alternative-text="Searching" size="small"></lightning-spinner>
-                            </div>
-                        </template>
-
-                        <template if:true={hasResults}>
-                            <template for:each={searchResults} for:item="cust">
-                                <div key={cust.accountId} 
-                                     class="slds-p-around_small slds-border_bottom slds-theme_default" 
-                                     style="cursor: pointer;"
-                                     onclick={handleSelect} 
-                                     data-id={cust.customerId}>
-                                    <div><strong>{cust.accountName}</strong></div>
-                                    <div class="slds-text-color_weak slds-text-body_small">ID: {cust.customerId}</div>
-                                </div>
-                            </template>
-                        </template>
-
-                        <template if:true={showNoResults}>
-                            <div class="slds-p-around_small slds-text-color_weak">No customers found.</div>
-                        </template>
+  <lightning-card>
+    <div class="slds-p-around_medium">
+      <div class="customer-search-section">
+        <button
+          type="button"
+          class="hamburger-trigger"
+          title="Open insights menu"
+          aria-label="Open insights menu"
+          aria-expanded={showInfoMenu}
+          aria-controls="insights-panel"
+          onclick={openInfoMenu}
+          disabled={isInsightsDisabled}
+        >
+          <span class="hamburger-line"></span>
+          <span class="hamburger-line"></span>
+          <span class="hamburger-line"></span>
+          <span class="slds-assistive-text">Open insights menu</span>
+        </button>
+        <div class="slds-is-relative customer-search-field">
+          <lightning-input
+            type="search"
+            label="Search by Name or Customer ID"
+            placeholder="Type Account Name or Customer ID (XC_ExternalId__c)..."
+            onkeypress={handleKeyPress}
+            value={searchTerm}
+            data-test-id="customer-search-input"
+            data-debug="search-input"
+            aria-label="Customer search input (Name or Customer ID)"
+          ></lightning-input>
+          <template if:true={showDropdown}>
+            <div
+              class="slds-box slds-theme_default slds-is-absolute"
+              style="
+                z-index: 999;
+                width: 100%;
+                max-height: 300px;
+                overflow-y: auto;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+              "
+            >
+              <template if:true={isSearching}>
+                <div
+                  class="slds-p-around_small slds-grid slds-grid_align-center"
+                >
+                  <lightning-spinner
+                    alternative-text="Searching"
+                    size="small"
+                  ></lightning-spinner>
+                </div>
+              </template>
+              <template if:true={hasResults}>
+                <template for:each={searchResults} for:item="cust">
+                  <div
+                    key={cust.accountId}
+                    class="slds-p-around_small slds-border_bottom slds-theme_default"
+                    style="cursor: pointer"
+                    onclick={handleSelect}
+                    data-id={cust.customerId}
+                  >
+                    <div><strong>{cust.accountName}</strong></div>
+                    <div class="slds-text-color_weak slds-text-body_small">
+                      ID: {cust.customerId}
                     </div>
+                  </div>
                 </template>
-            </div>
-            </div>
-
-            <template if:true={selectedCustomer}>
-                <div class="slds-grid slds-wrap slds-gutters">
-                    
-                    <div class="slds-col slds-size_1-of-1 slds-medium-size_4-of-12">
-                        <div class="customer-summary">
-                            <div class="customer-summary-header">
-                                <h3>Account Summary</h3>
-                            </div>
-                            <p class="slds-m-top_small"><strong>{selectedCustomer.accountName}</strong></p>
-                            <p>ID: {selectedCustomer.customerId}</p>
-                            <p class="slds-m-top_small">{selectedCustomer.fullAddress}</p>
-                        </div>
-
-
-                    </div>
-
-                    <div class="slds-col slds-size_1-of-1 slds-medium-size_8-of-12">
-                        <div class="products-section">
-                            <div class="form-selector">
-                                <div class="form-selector-header">
-                                    <div class="form-selector-header-copy">
-                                        <h3>Redemption Form</h3>
-                                        <p>Select a form to start building an order.</p>
-                                    </div>
-                                </div>
-                                <div class="form-selector-body">
-                                    <lightning-combobox
-                                        name="formSelector"
-                                        value={selectedForm}
-                                        placeholder="Select a form"
-                                        options={formOptions}
-                                        onchange={handleFormChange}>
-                                    </lightning-combobox>
-                                </div>
-                                <!-- Guidance for saved drafts live in the Insights menu -->
-                                <template if:true={isMilbon}>
-                                    <div class="menu-helper">
-                                        <p>Need to resume a draft or review recent orders? Tap the top-right insights menu.</p>
-                                    </div>
-                                </template>
-                            </div>
-
-                            <!-- Milbon Form -->
-                            <template if:true={isMilbon}>
-                                <h3>Milbon - Products</h3>
-
-                                <!-- Selected Products Summary -->
-                                <div class="selected-products">
-                                    <div class="selected-products-header">
-                                        <h4>Selected Products</h4>
-                                        <span class="selected-products-pill">{selectedProducts.length} items</span>
-                                    </div>
-                                    <div class="selected-products-list">
-                                        <template for:each={selectedProducts} for:item="line">
-                                            <article key={line.uid} class="selected-item-card">
-                                                <div class="selected-item-info">
-                                                    <p class="selected-product-code">{line.productCode}</p>
-                                                    <p class="selected-product-description">{line.description}</p>
-                                                </div>
-                                                <div class="selected-item-meta">
-                                                    <p class="selected-product-qty">Qty: {line.qty}</p>
-                                                    <p class="selected-product-unit">Unit ${line.unitPrice}</p>
-                                                    <strong class="selected-product-total">{line.total}</strong>
-                                                </div>
-                                            </article>
-                                        </template>
-                                    </div>
-                                    <template if:false={selectedProducts.length}>
-                                        <p class="selected-products-empty">Add products below to start your cart.</p>
-                                    </template>
-
-                                    <div class="order-total">
-                                        <p>Total: <span>$ {grandTotal}</span></p>
-                                    </div>
-
-                                    <div class="submit-section slds-m-top_medium slds-grid slds-grid_align-spread">
-                                        <lightning-button variant="neutral" label="Save Form" onclick={handleSaveClick}></lightning-button>
-                                        <lightning-button variant="neutral" label="Clear Form" onclick={handleClearFormClick}></lightning-button>
-                                        <lightning-button variant="brand" label="Complete Form" onclick={handleCompleteClick}></lightning-button>
-                                    </div>
-                                </div>
-
-                                <!-- Product Search -->
-                                <div class="product-search">
-                                    <lightning-input 
-                                        type="search" 
-                                        placeholder="Search by product code or description..."
-                                        value={productSearchTerm}
-                                        onchange={handleProductSearchChange}
-                                        data-test-id="product-search-input">
-                                    </lightning-input>
-                                    <lightning-button 
-                                        label="Clear Search" 
-                                        variant="neutral" 
-                                        class="slds-m-top_small" 
-                                        onclick={clearProductSearch}
-                                        disabled={isSearchDisabled}>
-                                    </lightning-button>
-                                </div>
-
-                                <!-- Product List -->
-                                <div class="product-list">
-                                    <template if:true={isLoadingProducts}>
-                                        <div class="loading-spinner">
-                                            <lightning-spinner alternative-text="Loading products" size="small"></lightning-spinner>
-                                        </div>
-                                    </template>
-                                    <template if:false={isLoadingProducts}>
-                                        <template for:each={displayedProducts} for:item="prod">
-                                            <div key={prod.productCode} class="product-item">
-                                                <div class="slds-grid slds-grid_vertical-align-center">
-                                                    <div class="slds-col slds-size_4-of-12">
-                                                        <p class="product-code">{prod.productCode}</p>
-                                                        <p class="product-description">{prod.description}</p>
-                                                    </div>
-                                                    <div class="slds-col slds-size_2-of-12">
-                                                        <p class="product-price">$ {prod.unitPrice}</p>
-                                                    </div>
-                                                    <div class="slds-col slds-size_3-of-12">
-                                                        <lightning-input type="number" label="Qty" 
-                                                            value={prod.qty} data-code={prod.productCode} onchange={handleProductQtyChange} class="product-qty">
-                                                        </lightning-input>
-                                                    </div>
-                                                    <div class="slds-col slds-size_3-of-12 slds-text-align_right">
-                                                        <strong class="product-total">$ {prod.total}</strong>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </template>
-                                        <template if:true={noProductsFound}>
-                                            <div class="no-results">No products found.</div>
-                                        </template>
-                                    </template>
-                                </div>
-
-                            </template>
-
-                            <!-- Placeholder for other forms -->
-                            <template if:false={isMilbon}>
-                                <div class="slds-text-color_weak slds-p-vertical_small">
-                                    Please select a form to begin.
-                                </div>
-                            </template>
-                        </div>
-                    </div>
+              </template>
+              <template if:true={showNoResults}>
+                <div class="slds-p-around_small slds-text-color_weak">
+                  No customers found.
                 </div>
-            </template>
-
-            <template if:false={selectedCustomer}>
-                <div class="slds-text-align_center slds-p-around_large slds-theme_shade">
-                    <p>Please search and select a customer to begin the order.</p>
-                </div>
-            </template>
+              </template>
+            </div>
+          </template>
         </div>
-    </lightning-card>
-
-    <template if:true={showInfoMenu}>
-        <section id="insights-panel" class="info-menu-overlay" role="dialog" aria-modal="true">
-            <div class="info-menu-backdrop" onclick={closeInfoMenu}></div>
-            <div class="info-menu-panel">
-                <div class="info-menu-panel__header">
-                    <div>
-                        <p class="info-menu-kicker">Hamburger Menu</p>
-                        <h3>Insights</h3>
-                    </div>
-                    <button class="info-menu-close" title="Close menu" onclick={closeInfoMenu}>&times;</button>
-                </div>
-                <div class="info-menu-panel__body">
-                    <div class="info-menu-section">
-                        <div class="info-menu-section__heading">
-                            <h4>Saved Forms</h4>
-                            <p>Pick a saved draft to resume work, or hit the close icon to cancel.</p>
-                        </div>
-                        <template if:true={savedFormsLoading}>
-                            <div class="info-menu-spinner">
-                                <lightning-spinner alternative-text="Loading saved forms" size="small"></lightning-spinner>
-                            </div>
-                        </template>
-                        <template if:false={savedFormsLoading}>
-                            <template if:true={savedForms.length}>
-                                <template for:each={savedForms} for:item="form">
-                                    <div key={form.Id}>
-                                        <button class="info-menu-card" data-id={form.Id} onclick={handleSavedFormSelection} type="button">
-                                            <div class="info-menu-card__top">
-                                            <template if:true={form.PONumber__c}>
-                                                <strong>PO {form.PONumber__c}</strong>
-                                            </template>
-                                            <template if:false={form.PONumber__c}>
-                                                <strong>PO No PO</strong>
-                                            </template>
-                                            <span>{form.formattedDate}</span>
-                                        </div>
-                                            <p class="info-menu-card__total">{form.formattedTotal}</p>
-                                        </button>
-                                    </div>
-                                </template>
-                            </template>
-                            <template if:false={savedForms.length}>
-                                <p class="info-menu-empty">No saved drafts available.</p>
-                            </template>
-                        </template>
-                    </div>
-                    <div class="info-menu-section">
-                        <div class="info-menu-section__heading">
-                            <h4>Recent Orders</h4>
-                        </div>
-                        <template if:true={recentOrders.length}>
-                                <template for:each={recentOrders} for:item="order">
-                                    <div key={order.id} class="info-menu-row">
-                                        <span>{order.date}</span>
-                                        <strong>{order.formattedTotal}</strong>
-                                    </div>
-                                </template>
-                        </template>
-                        <template if:false={recentOrders.length}>
-                            <p class="info-menu-empty">No completed orders on record.</p>
-                        </template>
-                    </div>
-                    <div class="info-menu-section">
-                        <div class="info-menu-section__heading">
-                            <h4>Recent Redemption Forms</h4>
-                        </div>
-                        <template if:true={recentRedemptionFormsLoading}>
-                            <div class="info-menu-spinner">
-                                <lightning-spinner alternative-text="Loading recent forms" size="small"></lightning-spinner>
-                            </div>
-                        </template>
-                        <template if:true={recentRedemptionForms.length}>
-                                <template for:each={recentRedemptionForms} for:item="form">
-                                    <div key={form.id} class="info-menu-row">
-                                        <span>{form.poNumber}</span>
-                                        <span>{form.formattedDate}</span>
-                                        <strong>{form.formattedTotal}</strong>
-                                    </div>
-                                </template>
-                        </template>
-                        <template if:false={recentRedemptionForms.length}>
-                            <p class="info-menu-empty">No recent redemption data.</p>
-                        </template>
-                    </div>
-                </div>
+      </div>
+      <template if:true={selectedCustomer}>
+        <div class="slds-grid slds-wrap slds-gutters">
+          <div class="slds-col slds-size_1-of-1 slds-medium-size_4-of-12">
+            <div class="customer-summary">
+              <div class="customer-summary-header">
+                <h3>Account Summary</h3>
+              </div>
+              <p class="slds-m-top_small">
+                <strong>{selectedCustomer.accountName}</strong>
+              </p>
+              <p>ID: {selectedCustomer.customerId}</p>
+              <p class="slds-m-top_small">{selectedCustomer.fullAddress}</p>
             </div>
-        </section>
-    </template>
+          </div>
+          <div class="slds-col slds-size_1-of-1 slds-medium-size_8-of-12">
+            <div class="products-section">
+              <div class="form-selector">
+                <div class="form-selector-header">
+                  <div class="form-selector-header-copy">
+                    <h3>Redemption Form</h3>
+                    <p>Select a form to start building an order.</p>
+                  </div>
+                </div>
+                <div class="form-selector-body">
+                  <lightning-combobox
+                    name="formSelector"
+                    value={selectedForm}
+                    placeholder="Select a form"
+                    options={formOptions}
+                    onchange={handleFormChange}
+                  >
+                  </lightning-combobox>
+                </div>
+                <div class="slds-m-bottom_medium">
+                  <lightning-radio-group
+                    name="customerType"
+                    label="Customer Type"
+                    options={customerTypeOptions}
+                    value={customerType}
+                    type="radio"
+                    onchange={handleCustomerTypeChange}
+                  >
+                  </lightning-radio-group>
+                </div>
+                <lightning-tabset
+                  variant="scoped"
+                  active-tab-value={activeProductTab}
+                  onchange={handleProductTabChange}
+                >
+                  <lightning-tab label="Standard Items" value="standard">
+                    <div class="selected-products">
+                      <div class="selected-products-header">
+                        <h4>Selected Products</h4>
+                        <span class="selected-products-pill"
+                          >{selectedProducts.length} items</span
+                        >
+                      </div>
+                      <div class="selected-products-list">
+                        <template for:each={selectedProducts} for:item="line">
+                          <article key={line.uid} class="selected-item-card">
+                            <div class="selected-item-info">
+                              <p class="selected-product-code">
+                                {line.productCode}
+                              </p>
+                              <p class="selected-product-description">
+                                {line.description}
+                              </p>
+                            </div>
+                            <div class="selected-item-meta">
+                              <p class="selected-product-qty">
+                                Qty: {line.qty}
+                              </p>
+                              <p class="selected-product-unit">
+                                Unit ${line.unitPrice}
+                              </p>
+                              <strong class="selected-product-total"
+                                >{line.total}</strong
+                              >
+                            </div>
+                          </article>
+                        </template>
+                      </div>
+                      <template if:false={selectedProducts.length}>
+                        <p class="selected-products-empty">
+                          Add products below to start your cart.
+                        </p>
+                      </template>
+                      <div class="order-total">
+                        <p>Total: <span>$ {grandTotal}</span></p>
+                      </div>
+                      <div
+                        class="submit-section slds-m-top_medium slds-grid slds-grid_align-spread"
+                      >
+                        <lightning-button
+                          variant="neutral"
+                          label="Save Form"
+                          onclick={handleSaveClick}
+                        ></lightning-button>
+                        <lightning-button
+                          variant="neutral"
+                          label="Clear Form"
+                          onclick={handleClearFormClick}
+                        ></lightning-button>
+                        <lightning-button
+                          variant="brand"
+                          label="Complete Form"
+                          onclick={handleCompleteClick}
+                        ></lightning-button>
+                      </div>
+                    </div>
+                    <div class="product-search">
+                      <lightning-input
+                        type="search"
+                        placeholder="Search by product code or description..."
+                        value={productSearchTerm}
+                        onchange={handleProductSearchChange}
+                        data-test-id="product-search-input"
+                      >
+                      </lightning-input>
+                      <lightning-button
+                        label="Clear Search"
+                        variant="neutral"
+                        class="slds-m-top_small"
+                        onclick={clearProductSearch}
+                        disabled={isSearchDisabled}
+                      >
+                      </lightning-button>
+                    </div>
+                    <div class="product-list">
+                      <template if:true={isLoadingProducts}>
+                        <div class="loading-spinner">
+                          <lightning-spinner
+                            alternative-text="Loading products"
+                            size="small"
+                          ></lightning-spinner>
+                        </div>
+                      </template>
+                      <template if:false={isLoadingProducts}>
+                        <template for:each={displayedProducts} for:item="prod">
+                          <div key={prod.productCode} class="product-item">
+                            <div
+                              class="slds-grid slds-grid_vertical-align-center"
+                            >
+                              <div class="slds-col slds-size_4-of-12">
+                                <p class="product-code">{prod.productCode}</p>
+                                <p class="product-description">
+                                  {prod.description}
+                                </p>
+                              </div>
+                              <div class="slds-col slds-size_2-of-12">
+                                <p class="product-price">$ {prod.unitPrice}</p>
+                              </div>
+                              <div class="slds-col slds-size_3-of-12">
+                                <lightning-input
+                                  type="number"
+                                  label="Qty"
+                                  value={prod.qty}
+                                  data-code={prod.productCode}
+                                  onchange={handleProductQtyChange}
+                                  class="product-qty"
+                                >
+                                </lightning-input>
+                              </div>
+                              <div
+                                class="slds-col slds-size_3-of-12 slds-text-align_right"
+                              >
+                                <strong class="product-total"
+                                  >$ {prod.total}</strong
+                                >
+                              </div>
+                            </div>
+                          </div>
+                        </template>
+                        <template if:true={noProductsFound}>
+                          <div class="no-results">No products found.</div>
+                        </template>
+                      </template>
+                    </div>
+                  </lightning-tab>
+                  <lightning-tab
+                    label={specialTabLabel}
+                    value="special"
+                    if:true={hasSpecialTab}
+                  >
+                    <div class="selected-products">
+                      <div class="selected-products-header">
+                        <h4>Selected Special Products</h4>
+                        <span class="selected-products-pill"
+                          >{specialSelectedProducts.length} items</span
+                        >
+                      </div>
+                      <div class="selected-products-list">
+                        <template
+                          for:each={specialSelectedProducts}
+                          for:item="line"
+                        >
+                          <article key={line.uid} class="selected-item-card">
+                            <div class="selected-item-info">
+                              <p class="selected-product-code">
+                                {line.productCode}
+                              </p>
+                              <p class="selected-product-description">
+                                {line.description}
+                              </p>
+                            </div>
+                            <div class="selected-item-meta">
+                              <p class="selected-product-qty">
+                                Qty: {line.qty}
+                              </p>
+                            </div>
+                          </article>
+                        </template>
+                      </div>
+                      <template if:false={specialSelectedProducts.length}>
+                        <p class="selected-products-empty">
+                          Add special products below to start your cart.
+                        </p>
+                      </template>
+                      <div class="order-total">
+                        <p>
+                          Required: <span>{specialRequiredCount} items</span>
+                        </p>
+                      </div>
+                      <div
+                        class="submit-section slds-m-top_medium slds-grid slds-grid_align-spread"
+                      >
+                        <lightning-button
+                          variant="neutral"
+                          label="Save Form"
+                          onclick={handleSaveClick}
+                        ></lightning-button>
+                        <lightning-button
+                          variant="neutral"
+                          label="Clear Form"
+                          onclick={handleClearFormClick}
+                        ></lightning-button>
+                        <lightning-button
+                          variant="brand"
+                          label="Complete Form"
+                          onclick={handleCompleteClick}
+                          disabled={specialTabSubmitDisabled}
+                        ></lightning-button>
+                      </div>
+                    </div>
+                    <div class="product-search">
+                      <lightning-input
+                        type="search"
+                        placeholder="Search by product code or description..."
+                        value={specialProductSearchTerm}
+                        onchange={handleSpecialProductSearchChange}
+                        data-test-id="special-product-search-input"
+                      >
+                      </lightning-input>
+                      <lightning-button
+                        label="Clear Search"
+                        variant="neutral"
+                        class="slds-m-top_small"
+                        onclick={clearSpecialProductSearch}
+                        disabled={isSpecialSearchDisabled}
+                      >
+                      </lightning-button>
+                    </div>
+                    <div class="product-list">
+                      <template if:true={isLoadingSpecialProducts}>
+                        <div class="loading-spinner">
+                          <lightning-spinner
+                            alternative-text="Loading products"
+                            size="small"
+                          ></lightning-spinner>
+                        </div>
+                      </template>
+                      <template if:false={isLoadingSpecialProducts}>
+                        <template
+                          for:each={specialDisplayedProducts}
+                          for:item="prod"
+                        >
+                          <div key={prod.productCode} class="product-item">
+                            <div
+                              class="slds-grid slds-grid_vertical-align-center"
+                            >
+                              <div class="slds-col slds-size_8-of-12">
+                                <p class="product-code">{prod.productCode}</p>
+                                <p class="product-description">
+                                  {prod.description}
+                                </p>
+                              </div>
+                              <div class="slds-col slds-size_4-of-12">
+                                <lightning-input
+                                  type="number"
+                                  label="Qty"
+                                  value={prod.qty}
+                                  data-code={prod.productCode}
+                                  onchange={handleSpecialProductQtyChange}
+                                  class="product-qty"
+                                >
+                                </lightning-input>
+                              </div>
+                            </div>
+                          </div>
+                        </template>
+                        <template if:true={specialNoProductsFound}>
+                          <div class="no-results">
+                            No special products found.
+                          </div>
+                        </template>
+                      </template>
+                    </div>
+                  </lightning-tab>
+                </lightning-tabset>
+                <template if:false={isMilbon}>
+                  <div class="slds-text-color_weak slds-p-vertical_small">
+                    Please select a form to begin.
+                  </div>
+                </template>
+              </div>
+            </div>
+          </div>
+        </div>
+      </template>
+      <template if:false={selectedCustomer}>
+        <div
+          class="slds-text-align_center slds-p-around_large slds-theme_shade"
+        >
+          <p>Please search and select a customer to begin the order.</p>
+        </div>
+      </template>
+    </div>
+  </lightning-card>
+  <template if:true={showInfoMenu}>
+    <section
+      id="insights-panel"
+      class="info-menu-overlay"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div class="info-menu-backdrop" onclick={closeInfoMenu}></div>
+      <div class="info-menu-panel">
+        <div class="info-menu-panel__header">
+          <div></div>
+          <button
+            class="info-menu-close"
+            title="Close menu"
+            onclick={closeInfoMenu}
+          >
+            &times;
+          </button>
+        </div>
+        <div class="info-menu-panel__body">
+          <div class="info-menu-section">
+            <div class="info-menu-section__heading">
+              <h4>Saved Forms</h4>
+              <p>
+                Pick a saved draft to resume work, or hit the close icon to
+                cancel.
+              </p>
+            </div>
+            <template if:true={savedFormsLoading}>
+              <div class="info-menu-spinner">
+                <lightning-spinner
+                  alternative-text="Loading saved forms"
+                  size="small"
+                ></lightning-spinner>
+              </div>
+            </template>
+            <template if:false={savedFormsLoading}>
+              <template if:true={savedForms.length}>
+                <template for:each={savedForms} for:item="form">
+                  <div key={form.Id}>
+                    <button
+                      class="info-menu-card"
+                      data-id={form.Id}
+                      onclick={handleSavedFormSelection}
+                      type="button"
+                    >
+                      <div class="info-menu-card__top">
+                        <template if:true={form.PONumber__c}>
+                          <strong>PO {form.PONumber__c}</strong>
+                        </template>
+                        <template if:false={form.PONumber__c}>
+                          <strong>PO No PO</strong>
+                        </template>
+                        <span>{form.formattedDate}</span>
+                      </div>
+                      <p class="info-menu-card__total">{form.formattedTotal}</p>
+                    </button>
+                  </div>
+                </template>
+              </template>
+              <template if:false={savedForms.length}>
+                <p class="info-menu-empty">No saved drafts available.</p>
+              </template>
+            </template>
+          </div>
+          <div class="info-menu-section">
+            <div class="info-menu-section__heading">
+              <h4>Recent Orders</h4>
+            </div>
+            <template if:true={recentOrders.length}>
+              <template for:each={recentOrders} for:item="order">
+                <div key={order.id} class="info-menu-row">
+                  <span>{order.date}</span>
+                  <strong>{order.formattedTotal}</strong>
+                </div>
+              </template>
+            </template>
+            <template if:false={recentOrders.length}>
+              <p class="info-menu-empty">No completed orders on record.</p>
+            </template>
+          </div>
+          <div class="info-menu-section">
+            <div class="info-menu-section__heading">
+              <h4>Recent Redemption Forms</h4>
+            </div>
+            <template if:true={recentRedemptionFormsLoading}>
+              <div class="info-menu-spinner">
+                <lightning-spinner
+                  alternative-text="Loading recent forms"
+                  size="small"
+                ></lightning-spinner>
+              </div>
+            </template>
+            <template if:true={recentRedemptionForms.length}>
+              <template for:each={recentRedemptionForms} for:item="form">
+                <div key={form.id} class="info-menu-row">
+                  <span>{form.poNumber}</span>
+                  <span>{form.formattedDate}</span>
+                  <strong>{form.formattedTotal}</strong>
+                </div>
+              </template>
+            </template>
+            <template if:false={recentRedemptionForms.length}>
+              <p class="info-menu-empty">No recent redemption data.</p>
+            </template>
+          </div>
+        </div>
+      </div>
+    </section>
+  </template>
 </template>

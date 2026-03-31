@@ -21,7 +21,7 @@
     "@salesforce/eslint-config-lwc": "^4.0.0",
     "@salesforce/eslint-plugin-aura": "^3.0.0",
     "@salesforce/eslint-plugin-lightning": "^2.0.0",
-    "@salesforce/sfdx-lwc-jest": "^7.0.2",
+    "@salesforce/sfdx-lwc-jest": "^2.2.0",
     "eslint": "^9.29.0",
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-jest": "^28.14.0",
@@ -38,7 +38,7 @@
       "eslint"
     ],
     "**/lwc/**": [
-        "sfdx-lwc-jest -- --bail --findRelatedTests --passWithNoTests"
+      "sfdx-lwc-jest -- --bail --findRelatedTests --passWithNoTests"
     ]
   }
 }
