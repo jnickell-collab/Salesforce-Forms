@@ -1,0 +1,128 @@
+<template>
+    <lightning-card class="admin-card">
+        <div class="admin-shell">
+            <header class="admin-header">
+                <div>
+                    <p class="kicker">Form Configurator</p>
+                    <h2>Item Assignment Portal</h2>
+                    <p class="subtitle">
+                        Map approved products to each redemption form and keep the live search list in sync.
+                    </p>
+                </div>
+                <div class="form-selector">
+                    <lightning-combobox
+                        label="Choose a form"
+                        value={selectedForm}
+                        options={formOptions}
+                        onchange={handleFormChange}
+                        placeholder="Select a form..."
+                        variant="label-stacked">
+                    </lightning-combobox>
+                </div>
+            </header>
+
+            <template if:true={selectedForm}>
+            <div class="lists-grid">
+                <section class="list-column">
+                    <div class="list-header">
+                        <h3>Available Products</h3>
+                        <p class="list-meta">Products not yet tied to the selected form.</p>
+                    </div>
+                    <lightning-input
+                        class="search-input"
+                        type="search"
+                        label="Search products"
+                        value={availableSearchTerm}
+                        onchange={handleAvailableSearchChange}
+                        placeholder="Filter by code or description">
+                    </lightning-input>
+                    <div class="list-body">
+                        <template if:true={isLoadingLists}>
+                            <div class="loading-state">
+                                <lightning-spinner alternative-text="Loading available products" size="small"></lightning-spinner>
+                            </div>
+                        </template>
+                        <template if:false={isLoadingLists}>
+                            <template if:true={filteredAvailableProducts.length}>
+                                <template for:each={filteredAvailableProducts} for:item="product" for:index="index">
+                                    <article
+                                        key={product.productId}
+                                        class={product.cardClass}
+                                        data-id={product.productId}
+                                        data-index={index}
+                                        onclick={handleAvailableItemClick}>
+                                        <p class="item-code">{product.productCode}</p>
+                                        <p class="item-description">{product.description}</p>
+                                    </article>
+                                </template>
+                            </template>
+                            <template if:false={filteredAvailableProducts.length}>
+                                <p class="empty-state">No available products match the current filter.</p>
+                            </template>
+                        </template>
+                    </div>
+                </section>
+
+                <div class="actions-panel">
+                    <lightning-button
+                        label="Move →"
+                        variant="brand"
+                        title="Assign selected products to the form"
+                        class="action-button"
+                        onclick={handleMoveRight}
+                        disabled={moveRightDisabled}>
+                    </lightning-button>
+                    <lightning-button
+                        label="← Remove"
+                        variant="neutral"
+                        title="Remove selected items from the form"
+                        class="action-button"
+                        onclick={handleMoveLeft}
+                        disabled={moveLeftDisabled}>
+                    </lightning-button>
+                    <template if:true={isWorking}>
+                        <lightning-spinner alternative-text="Applying changes" size="small" class="mini-spinner"></lightning-spinner>
+                    </template>
+                </div>
+
+                <section class="list-column assigned-column">
+                    <div class="list-header">
+                        <h3>Assigned Items</h3>
+                        <p class="list-meta">Products stored in SSG_RedemptionItems__c for the selected division.</p>
+                    </div>
+                    <div class="list-body">
+                        <template if:true={isLoadingLists}>
+                            <div class="loading-state">
+                                <lightning-spinner alternative-text="Loading assigned items" size="small"></lightning-spinner>
+                            </div>
+                        </template>
+                        <template if:false={isLoadingLists}>
+                            <template if:true={assignedItems.length}>
+                                <template for:each={displayAssignedItems} for:item="item" for:index="index">
+                                    <article
+                                        key={item.redemptionId}
+                                        class={item.cardClass}
+                                        data-id={item.redemptionId}
+                                        data-index={index}
+                                        onclick={handleAssignedItemClick}>
+                                        <p class="item-code">{item.itemId}</p>
+                                        <p class="item-description">{item.description}</p>
+                                    </article>
+                                </template>
+                            </template>
+                            <template if:false={assignedItems.length}>
+                                <p class="empty-state">No items assigned yet—move products from the left or refresh the form.</p>
+                            </template>
+                        </template>
+                    </div>
+                </section>
+            </div>
+
+            <p class="helper-text">Shift+click to range-select or Ctrl+click (Cmd+click on Mac) to toggle multiple items before moving them.</p>
+            </template>
+            <template if:false={selectedForm}>
+                <div class="empty-state" style="text-align:center; margin:2rem 0;">Please select a form to begin assigning items.</div>
+            </template>
+        </div>
+    </lightning-card>
+</template>
