@@ -1,18 +1,19 @@
 public with sharing class RedemptionItemsAdminController {
     @AuraEnabled
-    public static List<ProductPayload> getAvailableProducts(Integer divisionId) {
+    public static List<ProductPayload> getAvailableProducts(Integer divisionId, String promoTier) {
         if (divisionId == null) {
             return new List<ProductPayload>();
         }
 
         String divisionValue = String.valueOf(divisionId);
         Set<String> excludedCodes = new Set<String>();
-        for (SSG_RedemptionItems__c existing : [
-            SELECT SSG_ItemID__c
-            FROM SSG_RedemptionItems__c
-            WHERE SSG_DivisionID__c = :divisionId
-                  AND SSG_ItemID__c != null
-        ]) {
+        String exclusionQuery = 'SELECT SSG_ItemID__c FROM SSG_RedemptionItems__c WHERE SSG_DivisionID__c = :divisionId AND SSG_ItemID__c != null';
+        if (promoTier != null && promoTier != '') {
+            exclusionQuery += ' AND SSG_PromoTier__c = :promoTier';
+        } else {
+            exclusionQuery += ' AND (SSG_PromoTier__c = null OR SSG_PromoTier__c = \'\')';
+        }
+        for (SSG_RedemptionItems__c existing : Database.query(exclusionQuery)) {
             excludedCodes.add(existing.SSG_ItemID__c);
         }
 
@@ -44,16 +45,18 @@ public with sharing class RedemptionItemsAdminController {
     }
 
     @AuraEnabled
-    public static List<RedemptionItemPayload> getRedemptionItems(Integer divisionId) {
+    public static List<RedemptionItemPayload> getRedemptionItems(Integer divisionId, String promoTier) {
         if (divisionId == null) {
             return new List<RedemptionItemPayload>();
         }
-        List<SSG_RedemptionItems__c> rows = [
-            SELECT Id, SSG_ItemID__c, SSG_ItemDescription__c
-            FROM SSG_RedemptionItems__c
-            WHERE SSG_DivisionID__c = :divisionId
-            ORDER BY Name
-        ];
+        String soql = 'SELECT Id, SSG_ItemID__c, SSG_ItemDescription__c FROM SSG_RedemptionItems__c WHERE SSG_DivisionID__c = :divisionId';
+        if (promoTier != null && promoTier != '') {
+            soql += ' AND SSG_PromoTier__c = :promoTier';
+        } else {
+            soql += ' AND (SSG_PromoTier__c = null OR SSG_PromoTier__c = \'\')';
+        }
+        soql += ' ORDER BY Name';
+        List<SSG_RedemptionItems__c> rows = Database.query(soql);
         List<RedemptionItemPayload> result = new List<RedemptionItemPayload>();
         for (SSG_RedemptionItems__c row : rows) {
             result.add(
@@ -64,7 +67,7 @@ public with sharing class RedemptionItemsAdminController {
     }
 
     @AuraEnabled
-    public static void addRedemptionItems(String itemsJson, Integer divisionId) {
+    public static void addRedemptionItems(String itemsJson, Integer divisionId, String promoTier) {
         if (divisionId == null || itemsJson == null || itemsJson == '') {
             return;
         }
@@ -83,12 +86,13 @@ public with sharing class RedemptionItemsAdminController {
         }
 
         Set<String> existingCodes = new Set<String>();
-        for (SSG_RedemptionItems__c existing : [
-            SELECT SSG_ItemID__c
-            FROM SSG_RedemptionItems__c
-            WHERE SSG_DivisionID__c = :divisionId
-                  AND SSG_ItemID__c IN :requestedCodes
-        ]) {
+        String dupeQuery = 'SELECT SSG_ItemID__c FROM SSG_RedemptionItems__c WHERE SSG_DivisionID__c = :divisionId AND SSG_ItemID__c IN :requestedCodes';
+        if (promoTier != null && promoTier != '') {
+            dupeQuery += ' AND SSG_PromoTier__c = :promoTier';
+        } else {
+            dupeQuery += ' AND (SSG_PromoTier__c = null OR SSG_PromoTier__c = \'\')';
+        }
+        for (SSG_RedemptionItems__c existing : Database.query(dupeQuery)) {
             existingCodes.add(existing.SSG_ItemID__c);
         }
 
@@ -107,13 +111,14 @@ public with sharing class RedemptionItemsAdminController {
                 System.debug('Skipping: duplicate code ' + normalizedCode);
                 continue;
             }
-            System.debug('Adding: ' + normalizedCode + ' for division ' + divisionId);
+            System.debug('Adding: ' + normalizedCode + ' for division ' + divisionId + ' and promoTier ' + promoTier);
             inserts.add(
                 new SSG_RedemptionItems__c(
                     Name = normalizedCode,
                     SSG_ItemID__c = normalizedCode,
                     SSG_ItemDescription__c = payload.description,
-                    SSG_DivisionID__c = divisionId
+                    SSG_DivisionID__c = divisionId,
+                    SSG_PromoTier__c = promoTier
                 )
             );
         }

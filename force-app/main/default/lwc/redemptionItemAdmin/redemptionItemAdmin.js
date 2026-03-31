@@ -6,7 +6,9 @@ import removeRedemptionItems from '@salesforce/apex/RedemptionItemsAdminControll
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
 const FORM_OPTIONS = [
-    { label: 'Milbon', value: 'MILBON', divisionId: 40 }
+    { label: 'Milbon', value: 'MILBON', divisionId: 40 },
+    { label: '\u00A0\u00A0\u00A0\u2514 Platinum', value: 'MILBON-PLATINUM', divisionId: 40, promoTier: 'Platinum' },
+    { label: '\u00A0\u00A0\u00A0\u2514 Diamond', value: 'MILBON-DIAMOND', divisionId: 40, promoTier: 'Diamond' }
 ];
 
 export default class RedemptionItemAdmin extends LightningElement {
@@ -14,6 +16,7 @@ export default class RedemptionItemAdmin extends LightningElement {
     @track availableProducts = [];
     @track assignedItems = [];
     @track availableSearchTerm = '';
+    @track assignedSearchTerm = '';
     @track selectedAvailableProductIds = [];
     @track selectedAssignedItemIds = [];
     @track isLoadingLists = false;
@@ -26,13 +29,21 @@ export default class RedemptionItemAdmin extends LightningElement {
         // Do not load lists until a form is selected
     }
 
+
     get formOptions() {
         return FORM_OPTIONS.map(({ label, value }) => ({ label, value }));
     }
 
+    get currentFormMeta() {
+        return FORM_OPTIONS.find((option) => option.value === this.selectedForm) || {};
+    }
+
     get currentDivisionId() {
-        const form = FORM_OPTIONS.find((option) => option.value === this.selectedForm);
-        return form ? form.divisionId : null;
+        return this.currentFormMeta.divisionId || null;
+    }
+
+    get currentPromoTier() {
+        return this.currentFormMeta.promoTier || null;
     }
 
     get filteredAvailableProducts() {
@@ -126,6 +137,7 @@ export default class RedemptionItemAdmin extends LightningElement {
             return;
         }
         const divisionId = this.currentDivisionId;
+        const promoTier = this.currentPromoTier;
         const toAdd = this.selectedAvailableProductIds
             .map((id) => this.availableProducts.find((item) => item.productId === id))
             .filter((item) => item && item.productCode);
@@ -140,8 +152,8 @@ export default class RedemptionItemAdmin extends LightningElement {
             }))
         );
         // eslint-disable-next-line no-console
-        console.log('addRedemptionItems itemsJson:', itemsJson, 'divisionId:', divisionId);
-        addRedemptionItems({ itemsJson, divisionId })
+        console.log('addRedemptionItems itemsJson:', itemsJson, 'divisionId:', divisionId, 'promoTier:', promoTier);
+        addRedemptionItems({ itemsJson, divisionId, promoTier })
             .then(() => {
                 this.showToast(
                     'Items Added',
@@ -194,6 +206,9 @@ export default class RedemptionItemAdmin extends LightningElement {
 
     refreshItemLists() {
         const divisionId = this.currentDivisionId;
+        const promoTier = this.currentPromoTier;
+        // eslint-disable-next-line no-console
+        console.log('refreshItemLists - selectedForm:', this.selectedForm, 'divisionId:', divisionId, 'promoTier:', promoTier);
         if (!divisionId) {
             this.availableProducts = [];
             this.assignedItems = [];
@@ -201,8 +216,8 @@ export default class RedemptionItemAdmin extends LightningElement {
         }
         this.isLoadingLists = true;
         Promise.all([
-            getAvailableProducts({ divisionId }),
-            getRedemptionItems({ divisionId })
+            getAvailableProducts({ divisionId, promoTier }),
+            getRedemptionItems({ divisionId, promoTier })
         ])
             .then(([available, assigned]) => {
                 this.availableProducts = (available || []).map((item) => ({
@@ -224,6 +239,7 @@ export default class RedemptionItemAdmin extends LightningElement {
                 this.selectedAvailableProductIds = [];
                 this.selectedAssignedItemIds = [];
                 this.availableSearchTerm = '';
+                this.assignedSearchTerm = '';
                 this.lastAvailableIndex = undefined;
                 this.lastAssignedIndex = undefined;
             });
@@ -238,7 +254,7 @@ export default class RedemptionItemAdmin extends LightningElement {
                 ? 'selectedAvailableProductIds'
                 : 'selectedAssignedItemIds';
         const listData =
-            section === 'available' ? this.filteredAvailableProducts : this.displayAssignedItems;
+            section === 'available' ? this.filteredAvailableProducts : this.filteredAssignedItems;
         const lastIndexKey =
             section === 'available' ? 'lastAvailableIndex' : 'lastAssignedIndex';
         const idKey = section === 'available' ? 'productId' : 'redemptionId';
@@ -286,12 +302,24 @@ export default class RedemptionItemAdmin extends LightningElement {
         );
     }
 
-    get displayAssignedItems() {
-        return this.assignedItems.map((item) => ({
+    get filteredAssignedItems() {
+        const decorated = this.assignedItems.map((item) => ({
             ...item,
             cardClass: this.selectedAssignedItemIds.includes(item.redemptionId)
                 ? 'item-card item-card_selected'
                 : 'item-card'
         }));
+        if (this.assignedSearchTerm) {
+            const term = this.assignedSearchTerm.toLowerCase();
+            return decorated.filter((item) =>
+                (item.itemId || '').toLowerCase().includes(term) ||
+                (item.description || '').toLowerCase().includes(term)
+            );
+        }
+        return decorated;
+    }
+
+    handleAssignedSearchChange(event) {
+        this.assignedSearchTerm = event.target.value;
     }
 }

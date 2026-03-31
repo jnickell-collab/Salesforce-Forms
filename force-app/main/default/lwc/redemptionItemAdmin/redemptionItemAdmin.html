@@ -18,6 +18,7 @@
                         placeholder="Select a form..."
                         variant="label-stacked">
                     </lightning-combobox>
+                    <div class="form-hint">Milbon contains sub-forms: Platinum and Diamond.</div>
                 </div>
             </header>
 
@@ -90,6 +91,14 @@
                         <h3>Assigned Items</h3>
                         <p class="list-meta">Products stored in SSG_RedemptionItems__c for the selected division.</p>
                     </div>
+                    <lightning-input
+                        class="search-input"
+                        type="search"
+                        label="Search assigned items"
+                        value={assignedSearchTerm}
+                        onchange={handleAssignedSearchChange}
+                        placeholder="Filter by code or description">
+                    </lightning-input>
                     <div class="list-body">
                         <template if:true={isLoadingLists}>
                             <div class="loading-state">
@@ -97,8 +106,8 @@
                             </div>
                         </template>
                         <template if:false={isLoadingLists}>
-                            <template if:true={assignedItems.length}>
-                                <template for:each={displayAssignedItems} for:item="item" for:index="index">
+                            <template if:true={filteredAssignedItems.length}>
+                                <template for:each={filteredAssignedItems} for:item="item" for:index="index">
                                     <article
                                         key={item.redemptionId}
                                         class={item.cardClass}
@@ -110,8 +119,8 @@
                                     </article>
                                 </template>
                             </template>
-                            <template if:false={assignedItems.length}>
-                                <p class="empty-state">No items assigned yet—move products from the left or refresh the form.</p>
+                            <template if:false={filteredAssignedItems.length}>
+                                <p class="empty-state">No assigned items match the current filter.</p>
                             </template>
                         </template>
                     </div>
