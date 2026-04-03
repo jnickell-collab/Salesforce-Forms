@@ -186,8 +186,8 @@ public with sharing class RedemptionOrderService {
         results.add(res);
         continue;
       }
-      // Scope to Milbon orders per requirement
-      if (!'Milbon'.equalsIgnoreCase(req.formName)) {
+      // Validate form name against the central registry
+      if (FormDivisionLookup.getDivisionByFormName(req.formName) == null) {
         res.message = 'Unsupported form: ' + req.formName;
         results.add(res);
         continue;
@@ -248,10 +248,10 @@ public with sharing class RedemptionOrderService {
 
       // Create header record; set values except PONumber (generated once per order)
       RedemptionFormHeader__c hdr = new RedemptionFormHeader__c();
-      hdr.Name = 'Milbon Redemption ' + formatNowForName();
+      hdr.Name = req.formName + ' Redemption ' + formatNowForName();
       hdr.CustomerID__c = req.customerId;
       hdr.RepNumber__c = req.repNumber;
-      hdr.FormName__c = 'Milbon';
+      hdr.FormName__c = req.formName;
       hdr.OrderTotal__c = computedTotal;
       // Set status: default COMPLETE if not provided
       String desiredStatus = String.isBlank(req.formStatus)

@@ -11,6 +11,7 @@ import getAccountRepNumber from "@salesforce/apex/SSG_CustomerSearch.getAccountR
 import getRecentRedemptionForms from "@salesforce/apex/RedemptionOrderService.getRecentRedemptionForms";
 import getSavedForms from "@salesforce/apex/RedemptionOrderService.getSavedForms";
 import loadFormWithDetails from "@salesforce/apex/RedemptionOrderService.loadFormWithDetails";
+import getAllForms from "@salesforce/apex/FormDivisionLookup.getAllForms";
 
 export default class RewardRedemptionForm extends LightningElement {
   @track searchResults = [];
@@ -35,10 +36,61 @@ export default class RewardRedemptionForm extends LightningElement {
   _confirmAction = null;
   modalCloseTimer;
   @track inlineError = '';
-  formOptions = [
-    { label: "Milbon", value: "MILBON" }
-    // future forms can be added here
-  ];
+  @track _formRegistry = [];
+
+  @wire(getAllForms)
+  wiredFormRegistry({ data, error }) {
+    if (data) {
+      this._formRegistry = data;
+    } else if (error) {
+      console.error('Error loading form registry:', error);
+    }
+  }
+
+  // Build the form selector options dynamically from the registry.
+  // Parent forms are top-level options. Sub-forms that share a division
+  // with their parent (e.g. Milbon Gold, J Beverly Hills Concept) appear
+  // as indented entries directly in the dropdown.
+  // Diamond and Platinum remain handled via the customerType radio group
+  // inside Milbon, so they are excluded from the dropdown.
+  get formOptions() {
+    const hiddenSubForms = new Set(['MILBON-PLATINUM', 'MILBON-DIAMOND']);
+    const options = [];
+    const parents = this._formRegistry.filter((f) => !f.isSubForm);
+    for (const parent of parents) {
+      const key = parent.formName.toUpperCase().replace(/\s+/g, '-');
+      options.push({ label: parent.formName, value: key });
+      const subs = this._formRegistry.filter(
+        (f) => f.isSubForm && f.parentForm === parent.formName
+      );
+      for (const sub of subs) {
+        const subKey = sub.formName.toUpperCase().replace(/\s+/g, '-');
+        if (hiddenSubForms.has(subKey)) continue; // handled by radio group
+        options.push({ label: '\u00A0\u00A0\u00A0\u2514 ' + sub.formName, value: subKey });
+      }
+    }
+    return options;
+  }
+
+  // Resolve the currently selected form key back to a registry entry
+  get currentFormEntry() {
+    const key = this.selectedForm;
+    if (!key || !this._formRegistry.length) return null;
+    return this._formRegistry.find((f) => {
+      const fKey = f.formName.toUpperCase().replace(/\s+/g, '-');
+      return fKey === key;
+    }) || null;
+  }
+
+  // Division ID for the active form selection
+  get currentDivisionId() {
+    return this.currentFormEntry ? this.currentFormEntry.divisionId : null;
+  }
+
+  // The canonical formName stored in the registry (used for API calls)
+  get currentFormName() {
+    return this.currentFormEntry ? this.currentFormEntry.formName : null;
+  }
 
   // Customer type radio (None, Diamond, Platinum)
   customerTypeOptions = [
@@ -279,7 +331,10 @@ export default class RewardRedemptionForm extends LightningElement {
   }
 
   get isMilbon() {
-    return this.selectedForm === "MILBON";
+    // Milbon parent or any Milbon sub-form (Gold, Platinum, Diamond)
+    const entry = this.currentFormEntry;
+    if (!entry) return false;
+    return entry.formName === 'Milbon' || entry.parentForm === 'Milbon';
   }
 
   get activeRepNumber() {
@@ -436,9 +491,10 @@ export default class RewardRedemptionForm extends LightningElement {
     this.shipWithNext = "Y";
     this.shipToStore = "N";
     this.storeToShipToMessage = "";
-    // Fetch products based on form
-    if (this.selectedForm === "MILBON") {
-      this.fetchProducts("40");
+    // Fetch products based on resolved division
+    const entry = this.currentFormEntry;
+    if (entry && entry.divisionId) {
+      this.fetchProducts(String(entry.divisionId));
       // Reset customer type and special tab
       this.customerType = "NONE";
       this.activeProductTab = "standard";
@@ -448,7 +504,6 @@ export default class RewardRedemptionForm extends LightningElement {
       this.specialSelectedProducts = [];
       this.isLoadingSpecialProducts = false;
     }
-    // Add more forms here
   }
 
   // (Checkbox handlers removed; replaced by radio group logic)
@@ -478,8 +533,10 @@ export default class RewardRedemptionForm extends LightningElement {
   loadSpecialProducts() {
     const promoTier = this.isDiamond ? 'Diamond' : this.isPlatinum ? 'Platinum' : null;
     if (!promoTier) return;
+    const divisionId = this.currentDivisionId;
+    if (!divisionId) return;
     this.isLoadingSpecialProducts = true;
-    getRedemptionItems({ divisionId: 40, promoTier })
+    getRedemptionItems({ divisionId, promoTier })
       .then((result) => {
         this.specialAllProducts = (result || []).map((item) => ({
           productCode: item.itemId,
@@ -813,7 +870,8 @@ export default class RewardRedemptionForm extends LightningElement {
         this.isMilbon &&
         (!this.allProducts || this.allProducts.length === 0)
       ) {
-        await this.fetchProducts("40");
+        const div = this.currentDivisionId;
+        if (div) await this.fetchProducts(String(div));
       }
 
       // Restore customer type (Diamond/Platinum) from saved header
@@ -911,7 +969,19 @@ export default class RewardRedemptionForm extends LightningElement {
         this.repNumberFromAccount = res.header.repNumber;
       }
       if (!this.selectedForm) {
-        this.selectedForm = "MILBON";
+        // Try to restore the form selection from the saved header's formName
+        const savedFormName = res.header?.formName;
+        if (savedFormName) {
+          const match = this._formRegistry.find(
+            (f) => f.formName.toLowerCase() === savedFormName.toLowerCase()
+          );
+          if (match) {
+            this.selectedForm = match.formName.toUpperCase().replace(/\s+/g, '-');
+          }
+        }
+        if (!this.selectedForm) {
+          this.selectedForm = "MILBON";
+        }
       }
       this.showInfoMenu = false;
       this.dispatchEvent(
@@ -946,7 +1016,7 @@ export default class RewardRedemptionForm extends LightningElement {
     try {
       const rows = await getSavedForms({
         customerId: this.selectedCustomer?.customerId || null,
-        formName: "Milbon",
+        formName: this.currentFormName || "Milbon",
         repNumber
       });
       this.savedForms = (rows || []).map((row) => {
@@ -1025,8 +1095,8 @@ export default class RewardRedemptionForm extends LightningElement {
       this.showInlineError("The selected customer does not have a Customer ID. Please select a different customer or update the account.");
       return;
     }
-    if (this.selectedForm !== "MILBON") {
-      this.showInlineError("Please select the Milbon form before proceeding.");
+    if (!this.currentFormEntry) {
+      this.showInlineError("Please select a form before proceeding.");
       return;
     }
 
@@ -1082,7 +1152,7 @@ export default class RewardRedemptionForm extends LightningElement {
       {
         customerId: this.selectedCustomer.customerId,
         repNumber: this.repNumberFromAccount,
-        formName: "Milbon",
+        formName: this.currentFormName,
         formStatus: status,
         customerType: this.customerType || "NONE",
         shipWithNext: this.normalizeYesNo(this.shipWithNext, "Y"),

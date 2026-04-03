@@ -1,15 +1,10 @@
-import { LightningElement, track } from 'lwc';
+import { LightningElement, track, wire } from 'lwc';
 import getAvailableProducts from '@salesforce/apex/RedemptionItemsAdminController.getAvailableProducts';
 import getRedemptionItems from '@salesforce/apex/RedemptionItemsAdminController.getRedemptionItems';
 import addRedemptionItems from '@salesforce/apex/RedemptionItemsAdminController.addRedemptionItems';
 import removeRedemptionItems from '@salesforce/apex/RedemptionItemsAdminController.removeRedemptionItems';
+import getAllForms from '@salesforce/apex/FormDivisionLookup.getAllForms';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
-
-const FORM_OPTIONS = [
-    { label: 'Milbon', value: 'MILBON', divisionId: 40 },
-    { label: '\u00A0\u00A0\u00A0\u2514 Platinum', value: 'MILBON-PLATINUM', divisionId: 40, promoTier: 'Platinum' },
-    { label: '\u00A0\u00A0\u00A0\u2514 Diamond', value: 'MILBON-DIAMOND', divisionId: 40, promoTier: 'Diamond' }
-];
 
 export default class RedemptionItemAdmin extends LightningElement {
     @track selectedForm = '';
@@ -21,21 +16,46 @@ export default class RedemptionItemAdmin extends LightningElement {
     @track selectedAssignedItemIds = [];
     @track isLoadingLists = false;
     @track isWorking = false;
+    @track _formRegistry = [];
 
     lastAvailableIndex;
     lastAssignedIndex;
 
-    connectedCallback() {
-        // Do not load lists until a form is selected
+    @wire(getAllForms)
+    wiredForms({ data, error }) {
+        if (data) {
+            this._formRegistry = data;
+        } else if (error) {
+            console.error('Error loading form registry:', error);
+        }
     }
 
 
     get formOptions() {
-        return FORM_OPTIONS.map(({ label, value }) => ({ label, value }));
+        // Build a flat option list: parent forms first, sub-forms indented underneath their parent
+        const options = [];
+        const parents = this._formRegistry.filter((f) => !f.isSubForm);
+        for (const parent of parents) {
+            const key = parent.formName.toUpperCase().replace(/\s+/g, '-');
+            options.push({ label: parent.formName, value: key });
+            const subs = this._formRegistry.filter(
+                (f) => f.isSubForm && f.parentForm === parent.formName
+            );
+            for (const sub of subs) {
+                const subKey = sub.formName.toUpperCase().replace(/\s+/g, '-');
+                options.push({ label: '\u00A0\u00A0\u00A0\u2514 ' + sub.formName, value: subKey });
+            }
+        }
+        return options;
     }
 
     get currentFormMeta() {
-        return FORM_OPTIONS.find((option) => option.value === this.selectedForm) || {};
+        const selectedKey = this.selectedForm;
+        if (!selectedKey) return {};
+        return this._formRegistry.find((f) => {
+            const key = f.formName.toUpperCase().replace(/\s+/g, '-');
+            return key === selectedKey;
+        }) || {};
     }
 
     get currentDivisionId() {
