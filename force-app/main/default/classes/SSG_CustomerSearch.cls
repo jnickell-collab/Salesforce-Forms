@@ -16,8 +16,6 @@ public without sharing class SSG_CustomerSearch {
     public String customerId { get; set; }
     @AuraEnabled
     public String contactName { get; set; }
-    @AuraEnabled
-    public String fullAddress { get; set; }
 
     public SearchResult(Integer index, Account acc, Contact con) {
       this.index = index;
@@ -25,29 +23,6 @@ public without sharing class SSG_CustomerSearch {
       this.accountName = acc.Name;
       this.customerId = acc.XC_ExternalId__c;
       this.contactName = (con != null) ? con.Name : 'No Contact';
-
-      String street = String.isNotBlank(acc.ShippingStreet)
-        ? acc.ShippingStreet
-        : '';
-      String city = String.isNotBlank(acc.ShippingCity) ? acc.ShippingCity : '';
-      String state = String.isNotBlank(acc.ShippingState)
-        ? acc.ShippingState
-        : '';
-      String zip = String.isNotBlank(acc.ShippingPostalCode)
-        ? acc.ShippingPostalCode
-        : '';
-      String fullAddress = (street +
-        ' ' +
-        city +
-        ' ' +
-        state +
-        ' ' +
-        zip)
-        .trim();
-
-      this.fullAddress = String.isNotBlank(fullAddress)
-        ? fullAddress
-        : 'No Shipping Address';
     }
   }
 
@@ -309,7 +284,7 @@ public without sharing class SSG_CustomerSearch {
     Boolean isStoreUser
   ) {
     String query =
-      'SELECT Id, Name, XC_ExternalId__c, ShippingStreet, ShippingCity, ShippingState, ShippingPostalCode, ' +
+      'SELECT Id, Name, XC_ExternalId__c, ' +
       '(SELECT Id, Name FROM Contacts LIMIT 1) ' +
       'FROM Account ' +
       'WHERE (Name LIKE :searchPattern OR XC_ExternalId__c LIKE :searchPattern';

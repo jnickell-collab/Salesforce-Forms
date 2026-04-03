@@ -31,6 +31,8 @@ public with sharing class RedemptionOrderService {
     public String shipWithNext { get; set; } // Text(1) e.g., 'Y' or 'N' or null
     @AuraEnabled
     public Boolean isSpecial { get; set; } // true for Diamond/Platinum special tab items
+    @AuraEnabled
+    public String promoTier { get; set; } // Optional explicit tier on line: Diamond or Platinum
   }
   public class OrderRequest {
     @AuraEnabled
@@ -47,6 +49,12 @@ public with sharing class RedemptionOrderService {
     public String formStatus { get; set; } // 'SAVED' or 'COMPLETE' (optional; default COMPLETE)
     @AuraEnabled
     public String customerType { get; set; } // 'NONE', 'DIAMOND', 'PLATINUM'
+    @AuraEnabled
+    public String shipWithNext { get; set; } // 'Y' or 'N' on header
+    @AuraEnabled
+    public String shipToStore { get; set; } // 'Y' or 'N' on header
+    @AuraEnabled
+    public String headerMessage { get; set; } // Store-to-ship-to message
   }
   public class LineResult {
     @AuraEnabled
@@ -99,6 +107,12 @@ public with sharing class RedemptionOrderService {
     public String currencyIsoCode { get; set; }
     @AuraEnabled
     public String promoTier { get; set; }
+    @AuraEnabled
+    public String shipWithNext { get; set; }
+    @AuraEnabled
+    public String shipToStore { get; set; }
+    @AuraEnabled
+    public String headerMessage { get; set; }
   }
   public class LoadedDetail {
     @AuraEnabled
@@ -115,6 +129,8 @@ public with sharing class RedemptionOrderService {
     public String shipWithNext { get; set; }
     @AuraEnabled
     public Boolean isSpecial { get; set; }
+    @AuraEnabled
+    public String promoTier { get; set; }
   }
   public class LoadFormResult {
     @AuraEnabled
@@ -182,6 +198,14 @@ public with sharing class RedemptionOrderService {
         continue;
       }
 
+      // Normalize customer-level promo tier once per request.
+      String reqPromoTier = String.isBlank(req.customerType)
+        ? null
+        : req.customerType.trim().toUpperCase();
+      String detailPromoTier = reqPromoTier == 'DIAMOND'
+        ? 'Diamond'
+        : reqPromoTier == 'PLATINUM' ? 'Platinum' : null;
+
       // Build detail lines; compute total
       Decimal computedTotal = 0;
       List<RedemptionFormDetails__c> details = new List<RedemptionFormDetails__c>();
@@ -206,6 +230,13 @@ public with sharing class RedemptionOrderService {
         det.ItemPrice__c = l.unitPrice;
         det.Message__c = (l.isSpecial == true) ? 'SPECIAL' : l.message;
         det.ShipWithNext__c = l.shipWithNext;
+        if (l.isSpecial == true) {
+          // Prefer line promo tier if supplied, otherwise derive from request customer type.
+          String linePromoTier = String.isBlank(l.promoTier)
+            ? detailPromoTier
+            : l.promoTier.trim();
+          det.SSG_PromoTier__c = linePromoTier;
+        }
         // PONumber__c will be set after we generate PO per order
         details.add(det);
       }
@@ -228,10 +259,20 @@ public with sharing class RedemptionOrderService {
         : req.formStatus.trim().toUpperCase();
       hdr.FormStatus__c = desiredStatus;
       // Store promo tier (Diamond/Platinum) if provided
-      String promoTier = String.isBlank(req.customerType) ? 'NONE' : req.customerType.trim().toUpperCase();
+      String promoTier = String.isBlank(req.customerType)
+        ? 'NONE'
+        : req.customerType.trim().toUpperCase();
       if (promoTier != 'NONE') {
         hdr.SSG_PromoTier__c = promoTier;
       }
+      String shipWithNext = normalizeYesNo(req.shipWithNext, 'N');
+      hdr.SSG_ShipWithNext__c = shipWithNext;
+
+      String shipToStore = normalizeYesNo(req.shipToStore, 'N');
+      hdr.SSG_ShipToStore__c = shipToStore;
+      hdr.SSG_Message__c = String.isBlank(req.headerMessage)
+        ? null
+        : req.headerMessage.trim();
       if (
         Schema.sObjectType.RedemptionFormHeader__c.fields.CurrencyIsoCode.isCreateable() &&
         req.currencyIsoCode != null
@@ -360,6 +401,22 @@ public with sharing class RedemptionOrderService {
     return errs[0].getMessage();
   }
 
+  // Coerce Yes/No-like inputs to strict 'Y' or 'N'.
+  private static String normalizeYesNo(String rawValue, String fallback) {
+    String fb = (fallback == 'Y') ? 'Y' : 'N';
+    if (String.isBlank(rawValue)) {
+      return fb;
+    }
+    String norm = rawValue.trim().toUpperCase();
+    if (norm == 'Y' || norm == 'YES' || norm == 'TRUE') {
+      return 'Y';
+    }
+    if (norm == 'N' || norm == 'NO' || norm == 'FALSE') {
+      return 'N';
+    }
+    return fb;
+  }
+
   /**
    * Fetch recent RedemptionFormHeaders for a given CustomerID (XC_ExternalId__c).
    * Returns the most recent 5 forms ordered by CreatedDate DESC.
@@ -456,7 +513,10 @@ public with sharing class RedemptionOrderService {
           CreatedDate,
           LastModifiedDate,
           CurrencyIsoCode,
-          SSG_PromoTier__c
+          SSG_PromoTier__c,
+          SSG_ShipWithNext__c,
+          SSG_ShipToStore__c,
+          SSG_Message__c
         FROM RedemptionFormHeader__c
         WHERE Id = :headerId
         LIMIT 1
@@ -469,7 +529,8 @@ public with sharing class RedemptionOrderService {
           Quantity__c,
           ItemPrice__c,
           Message__c,
-          ShipWithNext__c
+          ShipWithNext__c,
+          SSG_PromoTier__c
         FROM RedemptionFormDetails__c
         WHERE PONumber__c = :h.PONumber__c
         ORDER BY CreatedDate ASC
@@ -490,6 +551,9 @@ public with sharing class RedemptionOrderService {
         ? String.valueOf(h.CurrencyIsoCode)
         : null;
       lh.promoTier = h.SSG_PromoTier__c;
+      lh.shipWithNext = h.SSG_ShipWithNext__c;
+      lh.shipToStore = h.SSG_ShipToStore__c;
+      lh.headerMessage = h.SSG_Message__c;
 
       for (RedemptionFormDetails__c d : dets) {
         LoadedDetail ld = new LoadedDetail();
@@ -499,7 +563,10 @@ public with sharing class RedemptionOrderService {
         ld.unitPrice = d.ItemPrice__c;
         ld.message = d.Message__c;
         ld.shipWithNext = d.ShipWithNext__c;
-        ld.isSpecial = (d.Message__c == 'SPECIAL');
+        ld.promoTier = d.SSG_PromoTier__c;
+        ld.isSpecial =
+          (d.SSG_PromoTier__c == 'Diamond' || d.SSG_PromoTier__c == 'Platinum') ||
+          (d.Message__c == 'SPECIAL');
         out.details.add(ld);
       }
 

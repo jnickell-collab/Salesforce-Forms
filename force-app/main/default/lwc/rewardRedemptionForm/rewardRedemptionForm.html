@@ -86,7 +86,7 @@
           <lightning-input
             type="search"
             label="Search by Name or Customer ID"
-            placeholder="Type Account Name or Customer ID (XC_ExternalId__c)..."
+            placeholder="Type Account Name or Customer ID"
             onkeypress={handleKeyPress}
             value={searchTerm}
             data-test-id="customer-search-input"
@@ -127,6 +127,9 @@
                     <div class="slds-text-color_weak slds-text-body_small">
                       ID: {cust.customerId}
                     </div>
+                    <div class="slds-text-color_weak slds-text-body_small">
+                      Contact: {cust.contactName}
+                    </div>
                   </div>
                 </template>
               </template>
@@ -150,7 +153,7 @@
                 <strong>{selectedCustomer.accountName}</strong>
               </p>
               <p>ID: {selectedCustomer.customerId}</p>
-              <p class="slds-m-top_small">{selectedCustomer.fullAddress}</p>
+              <p class="slds-m-top_small">Contact: {selectedCustomer.contactName}</p>
             </div>
           </div>
           <div class="slds-col slds-size_1-of-1 slds-medium-size_8-of-12">
@@ -172,6 +175,44 @@
                   >
                   </lightning-combobox>
                 </div>
+                <template if:true={hasSelectedForm}>
+                  <div class="slds-m-top_medium">
+                    <lightning-radio-group
+                      name="shipWithNext"
+                      label="Ship With Next?"
+                      options={shipWithNextOptions}
+                      value={shipWithNext}
+                      type="radio"
+                      onchange={handleShipWithNextChange}
+                    >
+                    </lightning-radio-group>
+                  </div>
+                  <template if:true={showShipToStore}>
+                    <div class="slds-m-top_small">
+                      <lightning-radio-group
+                        name="shipToStore"
+                        label="Ship To Store?"
+                        options={shipToStoreOptions}
+                        value={shipToStore}
+                        type="radio"
+                        onchange={handleShipToStoreChange}
+                      >
+                      </lightning-radio-group>
+                    </div>
+                    <template if:true={showStoreToShipToMessage}>
+                      <div class="slds-m-top_small">
+                        <lightning-input
+                          type="text"
+                          label="Store to Ship To:"
+                          value={storeToShipToMessage}
+                          onchange={handleStoreToShipToMessageChange}
+                          maxlength="255"
+                        >
+                        </lightning-input>
+                      </div>
+                    </template>
+                  </template>
+                </template>
                 <template if:true={isMilbon}>
                   <div class="slds-m-bottom_medium">
                     <lightning-radio-group
@@ -183,6 +224,12 @@
                       onchange={handleCustomerTypeChange}
                     >
                     </lightning-radio-group>
+                  </div>
+                </template>
+                <template if:true={inlineError}>
+                  <div class="slds-notify slds-notify_alert slds-alert_error slds-m-bottom_small" role="alert">
+                    <span class="slds-assistive-text">error</span>
+                    <h2>{inlineError}</h2>
                   </div>
                 </template>
                 <template if:true={isMilbon}>

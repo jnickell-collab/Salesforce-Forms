@@ -34,6 +34,7 @@ export default class RewardRedemptionForm extends LightningElement {
   @track confirmModalMessage = '';
   _confirmAction = null;
   modalCloseTimer;
+  @track inlineError = '';
   formOptions = [
     { label: "Milbon", value: "MILBON" }
     // future forms can be added here
@@ -46,12 +47,40 @@ export default class RewardRedemptionForm extends LightningElement {
     { label: "Platinum", value: "PLATINUM" }
   ];
   @track customerType = "NONE";
+  // Header-level shipping fields
+  shipWithNextOptions = [
+    { label: "Yes", value: "Y" },
+    { label: "No", value: "N" }
+  ];
+  shipToStoreOptions = [
+    { label: "Yes", value: "Y" },
+    { label: "No", value: "N" }
+  ];
+  @track shipWithNext = "Y";
+  @track shipToStore = "N";
+  @track storeToShipToMessage = "";
+
+  get hasSelectedForm() {
+    return !!this.selectedForm;
+  }
+
+  get showShipToStore() {
+    return this.shipWithNext === "N";
+  }
+
+  get showStoreToShipToMessage() {
+    return this.showShipToStore && this.shipToStore === "Y";
+  }
+
+  get normalizedCustomerType() {
+    return (this.customerType || "NONE").toUpperCase();
+  }
 
   get isDiamond() {
-    return this.customerType === "DIAMOND";
+    return this.normalizedCustomerType === "DIAMOND";
   }
   get isPlatinum() {
-    return this.customerType === "PLATINUM";
+    return this.normalizedCustomerType === "PLATINUM";
   }
 
   _switchingTab = false;
@@ -78,6 +107,36 @@ export default class RewardRedemptionForm extends LightningElement {
     setTimeout(() => {
       this._switchingTab = false;
     }, 200);
+  }
+
+  handleShipWithNextChange(event) {
+    this.shipWithNext = event.detail.value;
+    if (this.shipWithNext !== "N") {
+      this.shipToStore = "N";
+      this.storeToShipToMessage = "";
+    }
+  }
+
+  handleShipToStoreChange(event) {
+    this.shipToStore = event.detail.value;
+    if (this.shipToStore !== "Y") {
+      this.storeToShipToMessage = "";
+    }
+  }
+
+  handleStoreToShipToMessageChange(event) {
+    this.storeToShipToMessage = event.detail.value || event.target.value;
+  }
+
+  normalizeYesNo(value, fallback = "N") {
+    const normalized = String(value || "").trim().toUpperCase();
+    if (normalized === "Y" || normalized === "YES" || normalized === "TRUE") {
+      return "Y";
+    }
+    if (normalized === "N" || normalized === "NO" || normalized === "FALSE") {
+      return "N";
+    }
+    return fallback;
   }
 
   // Returns required item count for special tab
@@ -374,6 +433,9 @@ export default class RewardRedemptionForm extends LightningElement {
   handleFormChange(event) {
     this.selectedForm = event.detail.value;
     this.savedForms = [];
+    this.shipWithNext = "Y";
+    this.shipToStore = "N";
+    this.storeToShipToMessage = "";
     // Fetch products based on form
     if (this.selectedForm === "MILBON") {
       this.fetchProducts("40");
@@ -675,10 +737,15 @@ export default class RewardRedemptionForm extends LightningElement {
     this._confirmAction = action;
     this.showConfirmModal = true;
   }
-  handleConfirmYes() {
+  async handleConfirmYes() {
     this.showConfirmModal = false;
     if (this._confirmAction) {
-      this._confirmAction();
+      try {
+        await Promise.resolve(this._confirmAction());
+      } catch (e) {
+        const errMsg = e && e.message ? e.message : "Unable to complete the requested action.";
+        this.showInlineError(errMsg);
+      }
     }
     this._confirmAction = null;
   }
@@ -702,6 +769,16 @@ export default class RewardRedemptionForm extends LightningElement {
       qty: 0,
       total: 0
     }));
+    // Clear special-tab selections as well so Diamond/Platinum is fully reset.
+    this.specialSelectedProducts = [];
+    this.specialProductSearchTerm = "";
+    this.specialDisplayedProducts = (this.specialAllProducts || []).map((prod) => ({
+      ...prod,
+      qty: 0
+    }));
+    this.shipWithNext = "Y";
+    this.shipToStore = "N";
+    this.storeToShipToMessage = "";
     this.grandTotal = 0;
   }
 
@@ -746,15 +823,24 @@ export default class RewardRedemptionForm extends LightningElement {
       } else {
         this.customerType = 'NONE';
       }
+      this.shipWithNext = this.normalizeYesNo(res.header?.shipWithNext, "Y");
+      this.shipToStore = this.normalizeYesNo(res.header?.shipToStore, "N");
+      this.storeToShipToMessage = res.header?.headerMessage || "";
 
       const prodMap = {};
       (this.allProducts || []).forEach((p) => {
         prodMap[p.productCode] = p;
       });
 
-      // Split details into standard vs special based on isSpecial flag
-      const standardDetails = (res.details || []).filter((d) => !d.isSpecial);
-      const specialDetails = (res.details || []).filter((d) => d.isSpecial);
+      // Split details by detail promo tier (new source of truth), with fallback to isSpecial.
+      const standardDetails = (res.details || []).filter((d) => {
+        const tier = (d.promoTier || "").toLowerCase();
+        return tier !== "diamond" && tier !== "platinum" && !d.isSpecial;
+      });
+      const specialDetails = (res.details || []).filter((d) => {
+        const tier = (d.promoTier || "").toLowerCase();
+        return tier === "diamond" || tier === "platinum" || d.isSpecial;
+      });
 
       const restoredStandard = standardDetails.map((d, idx) => {
         const prodMeta = prodMap[d.itemId];
@@ -793,6 +879,7 @@ export default class RewardRedemptionForm extends LightningElement {
           productCode: d.itemId,
           description: d.itemId,
           qty: d.quantity || 0,
+            promoTier: d.promoTier || (this.isDiamond ? 'Diamond' : this.isPlatinum ? 'Platinum' : null),
           uid: this.generateLineUid(d.itemId || `special-${idx}`)
         }));
         // Merge descriptions from loaded special products
@@ -889,6 +976,34 @@ export default class RewardRedemptionForm extends LightningElement {
     return `${sanitized}-${Date.now()}-${randomPart}`;
   }
 
+  showInlineError(message) {
+    this.inlineError = message;
+    console.error('[RewardRedemptionForm]', message);
+  }
+
+  clearInlineError() {
+    this.inlineError = '';
+  }
+
+  validateSpecialTierRequirementForComplete() {
+    if (!this.isDiamond && !this.isPlatinum) {
+      return true;
+    }
+    const required = this.isDiamond ? 30 : 60;
+    const selected = this.specialTotalSelectedQty;
+    if (selected === required) {
+      return true;
+    }
+    const remaining = Math.max(required - selected, 0);
+    const tierLabel = this.isDiamond ? "Diamond" : "Platinum";
+    const qtyLabel = remaining === 1 ? "item" : "items";
+    const msg = remaining > 0
+      ? `You are missing ${remaining} ${tierLabel} ${qtyLabel}. Please add them in the ${tierLabel} Items tab before completing.`
+      : `You have selected too many ${tierLabel} items. Please keep exactly ${required} before completing.`;
+    this.showInlineError(msg);
+    return false;
+  }
+
   async handleSaveOrComplete(statusOrEvent) {
     // Support being called as handler (event) or directly (string)
     let status =
@@ -900,36 +1015,18 @@ export default class RewardRedemptionForm extends LightningElement {
             statusOrEvent.target.dataset.status) ||
           "COMPLETE";
     // status: 'SAVED' or 'COMPLETE'
+    this.clearInlineError();
     // Basic client-side validations (allow lighter for SAVED if desired)
     if (!this.selectedCustomer) {
-      this.dispatchEvent(
-        new ShowToastEvent({
-          title: "Select a customer",
-          message: "Please search and select a customer before submitting.",
-          variant: "warning"
-        })
-      );
+      this.showInlineError("Please search and select a customer before submitting.");
       return;
     }
     if (!this.selectedCustomer.customerId) {
-      this.dispatchEvent(
-        new ShowToastEvent({
-          title: "Invalid Customer",
-          message:
-            "The selected customer does not have a Customer ID. Please select a different customer or update the account.",
-          variant: "warning"
-        })
-      );
+      this.showInlineError("The selected customer does not have a Customer ID. Please select a different customer or update the account.");
       return;
     }
     if (this.selectedForm !== "MILBON") {
-      this.dispatchEvent(
-        new ShowToastEvent({
-          title: "Select a form",
-          message: "Please select the Milbon form before proceeding.",
-          variant: "warning"
-        })
-      );
+      this.showInlineError("Please select the Milbon form before proceeding.");
       return;
     }
 
@@ -947,7 +1044,8 @@ export default class RewardRedemptionForm extends LightningElement {
           qty: p.qty,
           total: 0,
           uid: p.uid,
-          isSpecial: true
+          isSpecial: true,
+          promoTier: this.isDiamond ? 'Diamond' : this.isPlatinum ? 'Platinum' : null
         }));
       // Remove any duplicates by productCode
       const existingCodes = new Set(validLines.map((l) => l.productCode));
@@ -958,52 +1056,26 @@ export default class RewardRedemptionForm extends LightningElement {
 
     // Diamond/Platinum item count enforcement — only on COMPLETE, not SAVED
     if (status === "COMPLETE") {
-      if (this.isDiamond && this.specialRemainingCount !== 0) {
-        this.dispatchEvent(
-          new ShowToastEvent({
-            title: "Diamond Item Requirement",
-            message:
-              "Diamond customers must select exactly 30 items in the Diamond Items tab before completing.",
-            variant: "error"
-          })
-        );
-        return;
-      }
-      if (this.isPlatinum && this.specialRemainingCount !== 0) {
-        this.dispatchEvent(
-          new ShowToastEvent({
-            title: "Platinum Item Requirement",
-            message:
-              "Platinum customers must select exactly 60 items in the Platinum Items tab before completing.",
-            variant: "error"
-          })
-        );
+      if (!this.validateSpecialTierRequirementForComplete()) {
         return;
       }
     }
 
     // For COMPLETE, enforce at least one line across both tabs
     if (status === "COMPLETE" && validLines.length === 0) {
-      this.dispatchEvent(
-        new ShowToastEvent({
-          title: "Add products",
-          message:
-            "Please add at least one product with quantity greater than zero.",
-          variant: "warning"
-        })
-      );
+      this.showInlineError("Please add at least one product with quantity greater than zero.");
       return;
     }
 
     if (!this.repNumberFromAccount) {
-      this.dispatchEvent(
-        new ShowToastEvent({
-          title: "Missing Sales Rep Number",
-          message:
-            "The selected customer Account does not have a Sales Rep Number (XC_SalesRepId__c).",
-          variant: status === "COMPLETE" ? "warning" : "info"
-        })
-      );
+      this.showInlineError("The selected customer Account does not have a Sales Rep Number (XC_SalesRepId__c). Cannot submit.");
+      return;
+    }
+
+    const normalizedStoreMessage = String(this.storeToShipToMessage || "").trim();
+    if (this.showStoreToShipToMessage && !normalizedStoreMessage) {
+      this.showInlineError("Please enter a store name when Ship To Store is set to Yes.");
+      return;
     }
 
     const payload = [
@@ -1013,13 +1085,21 @@ export default class RewardRedemptionForm extends LightningElement {
         formName: "Milbon",
         formStatus: status,
         customerType: this.customerType || "NONE",
+        shipWithNext: this.normalizeYesNo(this.shipWithNext, "Y"),
+        shipToStore: this.showShipToStore
+          ? this.normalizeYesNo(this.shipToStore, "N")
+          : "N",
+        headerMessage: this.showStoreToShipToMessage
+          ? normalizedStoreMessage
+          : null,
         lines: validLines.map((p) => ({
           itemId: p.productCode,
           quantity: p.qty,
           unitPrice: p.unitPrice || 0,
           message: null,
           shipWithNext: null,
-          isSpecial: p.isSpecial || false
+          isSpecial: p.isSpecial || false,
+          promoTier: p.promoTier || null
         }))
       }
     ];
@@ -1061,13 +1141,12 @@ export default class RewardRedemptionForm extends LightningElement {
         }
       }
     } catch (e) {
-      this.dispatchEvent(
-        new ShowToastEvent({
-          title: status === "SAVED" ? "Save Failed" : "Submission Failed",
-          message: e && e.message ? e.message : "An unexpected error occurred.",
-          variant: "error"
-        })
-      );
+      const errMsg = e && e.body && e.body.message
+        ? e.body.message
+        : e && e.message
+          ? e.message
+          : "An unexpected error occurred.";
+      this.showInlineError(`${status === "SAVED" ? "Save" : "Submission"} Failed: ${errMsg}`);
     } finally {
       this.submitting = false;
     }
@@ -1085,6 +1164,9 @@ export default class RewardRedemptionForm extends LightningElement {
     );
   }
   handleCompleteClick() {
+    if (!this.validateSpecialTierRequirementForComplete()) {
+      return;
+    }
     this.openConfirmModal(
       'Are you sure you want to submit this form?',
       () => this.handleSaveOrComplete('COMPLETE')
@@ -1109,6 +1191,9 @@ export default class RewardRedemptionForm extends LightningElement {
     this.recentOrders = [];
     this.savedForms = [];
     this.showInfoMenu = false;
+    this.shipWithNext = "Y";
+    this.shipToStore = "N";
+    this.storeToShipToMessage = "";
     this.successMessage = {};
   }
 
