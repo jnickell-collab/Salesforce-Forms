@@ -201,14 +201,15 @@
                     </div>
                     <template if:true={showStoreToShipToMessage}>
                       <div class="slds-m-top_small">
-                        <lightning-input
-                          type="text"
+                        <lightning-combobox
+                          name="storeToShipToMessage"
                           label="Store to Ship To:"
                           value={storeToShipToMessage}
+                          options={storeLocationOptions}
                           onchange={handleStoreToShipToMessageChange}
-                          maxlength="255"
+                          placeholder="Select a store location"
                         >
-                        </lightning-input>
+                        </lightning-combobox>
                       </div>
                     </template>
                   </template>

@@ -107,6 +107,78 @@ export default class RewardRedemptionForm extends LightningElement {
     { label: "Yes", value: "Y" },
     { label: "No", value: "N" }
   ];
+  // Store location dropdown options
+  storeLocationOptions = [
+    { label: 'Home Office Warehouse (01)', value: 'Home Office Warehouse (01)' },
+    { label: 'Oklahoma City (02)', value: 'Oklahoma City (02)' },
+    { label: 'Kansas City South (03)', value: 'Kansas City South (03)' },
+    { label: 'St Louis (04)', value: 'St Louis (04)' },
+    { label: 'Moore (05)', value: 'Moore (05)' },
+    { label: 'Kansas City North (06)', value: 'Kansas City North (06)' },
+    { label: 'Tulsa (07)', value: 'Tulsa (07)' },
+    { label: 'St Peters (08)', value: 'St Peters (08)' },
+    { label: 'Springfield South (09)', value: 'Springfield South (09)' },
+    { label: 'Springfield North (10)', value: 'Springfield North (10)' },
+    { label: 'Louisville (11)', value: 'Louisville (11)' },
+    { label: 'Memphis (12)', value: 'Memphis (12)' },
+    { label: 'Nashville (13)', value: 'Nashville (13)' },
+    { label: 'Franklin (14)', value: 'Franklin (14)' },
+    { label: 'Beaumont (15)', value: 'Beaumont (15)' },
+    { label: 'Weatherford (16)', value: 'Weatherford (16)' },
+    { label: 'Farmers Branch (17)', value: 'Farmers Branch (17)' },
+    { label: 'Grapevine (18)', value: 'Grapevine (18)' },
+    { label: 'Arlington (19)', value: 'Arlington (19)' },
+    { label: 'Plano (20)', value: 'Plano (20)' },
+    { label: 'Princess San Antonio (202)', value: 'Princess San Antonio (202)' },
+    { label: 'Princess Houston (203)', value: 'Princess Houston (203)' },
+    { label: 'Princess Austin (204)', value: 'Princess Austin (204)' },
+    { label: 'Princess Dallas (205)', value: 'Princess Dallas (205)' },
+    { label: 'Princess Fort Worth (206)', value: 'Princess Fort Worth (206)' },
+    { label: 'Spring (207)', value: 'Spring (207)' },
+    { label: 'Sioux Falls (209)', value: 'Sioux Falls (209)' },
+    { label: 'Oak Lawn (21)', value: 'Oak Lawn (21)' },
+    { label: 'Fargo (210)', value: 'Fargo (210)' },
+    { label: 'Maplewood (211)', value: 'Maplewood (211)' },
+    { label: 'St Cloud (212)', value: 'St Cloud (212)' },
+    { label: 'Burnsville (213)', value: 'Burnsville (213)' },
+    { label: 'Austin (22)', value: 'Austin (22)' },
+    { label: 'Galleria (24)', value: 'Galleria (24)' },
+    { label: 'San Antonio (25)', value: 'San Antonio (25)' },
+    { label: 'Clear Lake (27)', value: 'Clear Lake (27)' },
+    { label: 'Fort Worth (28)', value: 'Fort Worth (28)' },
+    { label: 'Overland Park (29)', value: 'Overland Park (29)' },
+    { label: 'Katy (30)', value: 'Katy (30)' },
+    { label: 'The Woodlands (31)', value: 'The Woodlands (31)' },
+    { label: 'Sandy Springs (32)', value: 'Sandy Springs (32)' },
+    { label: 'Omaha (33)', value: 'Omaha (33)' },
+    { label: 'Des Moines (34)', value: 'Des Moines (34)' },
+    { label: 'Wichita (35)', value: 'Wichita (35)' },
+    { label: 'Golden Valley (36)', value: 'Golden Valley (36)' },
+    { label: 'Appleton (37)', value: 'Appleton (37)' },
+    { label: 'Eau Claire (38)', value: 'Eau Claire (38)' },
+    { label: 'Green Bay (39)', value: 'Green Bay (39)' },
+    { label: 'West Madison (40)', value: 'West Madison (40)' },
+    { label: 'East Madison (41)', value: 'East Madison (41)' },
+    { label: 'Germantown (42)', value: 'Germantown (42)' },
+    { label: 'Waukesha (43)', value: 'Waukesha (43)' },
+    { label: 'West Allis (44)', value: 'West Allis (44)' },
+    { label: 'Rochester (45)', value: 'Rochester (45)' },
+    { label: 'Woodbury (46)', value: 'Woodbury (46)' },
+    { label: 'Milwaukee (47)', value: 'Milwaukee (47)' },
+    { label: 'Clayton (48)', value: 'Clayton (48)' },
+    { label: 'Broken Arrow (49)', value: 'Broken Arrow (49)' },
+    { label: 'Westport (50)', value: 'Westport (50)' },
+    { label: 'Cedar Rapids (51)', value: 'Cedar Rapids (51)' },
+    { label: 'Springdale (52)', value: 'Springdale (52)' },
+    { label: 'Murfreesboro (53)', value: 'Murfreesboro (53)' },
+    { label: 'Columbia (54)', value: 'Columbia (54)' },
+    { label: 'Little Rock (55)', value: 'Little Rock (55)' },
+    { label: 'Lincoln (56)', value: 'Lincoln (56)' },
+    { label: 'Knoxville (57)', value: 'Knoxville (57)' },
+    { label: 'Lubbock (58)', value: 'Lubbock (58)' },
+    { label: 'Amarillo (59)', value: 'Amarillo (59)' },
+    { label: 'Midland (60)', value: 'Midland (60)' }
+  ];
   @track shipWithNext = "Y";
   @track shipToStore = "N";
   @track storeToShipToMessage = "";
@@ -176,7 +248,8 @@ export default class RewardRedemptionForm extends LightningElement {
   }
 
   handleStoreToShipToMessageChange(event) {
-    this.storeToShipToMessage = event.detail.value || event.target.value;
+    // Only allow selection from the dropdown
+    this.storeToShipToMessage = event.detail.value;
   }
 
   normalizeYesNo(value, fallback = "N") {
@@ -330,10 +403,10 @@ export default class RewardRedemptionForm extends LightningElement {
   }
 
   get isMilbon() {
-    // Milbon parent or any Milbon sub-form (Gold, Platinum, Diamond)
+    // Only true for the parent Milbon form (not sub-forms)
     const entry = this.currentFormEntry;
     if (!entry) return false;
-    return entry.formName === 'Milbon' || entry.parentForm === 'Milbon';
+    return entry.formName === 'Milbon';
   }
 
   get activeRepNumber() {
