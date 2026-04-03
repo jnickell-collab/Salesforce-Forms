@@ -4,7 +4,6 @@ import { ShowToastEvent } from "lightning/platformShowToastEvent";
 import searchCustomers from "@salesforce/apex/SSG_CustomerSearch.searchCustomers";
 import getUserInfo from "@salesforce/apex/SSG_CustomerSearch.getUserInfo";
 import getRelevantOrders from "@salesforce/apex/SSG_CustomerSearch.getRelevantOrders";
-import getProducts from "@salesforce/apex/SSG_CustomerSearch.getProducts";
 import getRedemptionItems from "@salesforce/apex/RedemptionItemsAdminController.getRedemptionItems";
 import submitOrders from "@salesforce/apex/RedemptionOrderService.submitOrders";
 import getAccountRepNumber from "@salesforce/apex/SSG_CustomerSearch.getAccountRepNumber";
@@ -491,10 +490,10 @@ export default class RewardRedemptionForm extends LightningElement {
     this.shipWithNext = "Y";
     this.shipToStore = "N";
     this.storeToShipToMessage = "";
-    // Fetch products based on resolved division
+    // Fetch products based on resolved division and promo tier
     const entry = this.currentFormEntry;
     if (entry && entry.divisionId) {
-      this.fetchProducts(String(entry.divisionId));
+      this.fetchProducts(String(entry.divisionId), entry.promoTier || null);
       // Reset customer type and special tab
       this.customerType = "NONE";
       this.activeProductTab = "standard";
@@ -669,13 +668,18 @@ export default class RewardRedemptionForm extends LightningElement {
     return this.specialRemainingCount !== 0;
   }
 
-  fetchProducts(division) {
+  fetchProducts(division, promoTier = null) {
     this.isLoadingProducts = true;
     this.isLoadingSpecialProducts = this.hasSpecialTab;
     this.productSearchTerm = "";
-    getProducts({ division })
+    const divisionId = parseInt(division, 10);
+    getRedemptionItems({ divisionId, promoTier })
       .then((result) => {
-        this.allProducts = result || [];
+        this.allProducts = (result || []).map((item) => ({
+          productCode: item.itemId,
+          description: item.description,
+          unitPrice: item.unitPrice || 0
+        }));
         this.displayedProducts = this.allProducts.map((prod) => ({
           ...prod,
           qty: 0,
@@ -871,7 +875,8 @@ export default class RewardRedemptionForm extends LightningElement {
         (!this.allProducts || this.allProducts.length === 0)
       ) {
         const div = this.currentDivisionId;
-        if (div) await this.fetchProducts(String(div));
+        const entry = this.currentFormEntry;
+        if (div) await this.fetchProducts(String(div), entry?.promoTier || null);
       }
 
       // Restore customer type (Diamond/Platinum) from saved header

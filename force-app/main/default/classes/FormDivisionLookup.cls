@@ -33,7 +33,7 @@ public with sharing class FormDivisionLookup {
             new FormEntry('ColorProof',              11, false, null,              null),
             new FormEntry('Eleven',                  28, false, null,              null),
             new FormEntry('J Beverly Hills',         46, false, null,              null),
-            new FormEntry('J Beverly Hills Concept', 46, true,  'J Beverly Hills', null),
+            new FormEntry('J Beverly Hills Concept', 46, true,  'J Beverly Hills', 'Concept'),
             new FormEntry('Keratherapy',             17, false, null,              null),
             new FormEntry('Living Proof',            41, false, null,              null),
             new FormEntry('Milbon',                  40, false, null,              null),

@@ -232,7 +232,7 @@
                     <h2>{inlineError}</h2>
                   </div>
                 </template>
-                <template if:true={isMilbon}>
+                <template if:true={hasSelectedForm}>
                 <lightning-tabset
                   variant="scoped"
                   active-tab-value={activeProductTab}
@@ -496,7 +496,7 @@
                   </lightning-tab>
                 </lightning-tabset>
                 </template>
-                <template if:false={isMilbon}>
+                <template if:false={hasSelectedForm}>
                   <div class="slds-text-color_weak slds-p-vertical_small">
                     Please select a form to begin.
                   </div>
