@@ -1,4 +1,32 @@
 <template>
+  <!-- Confirmation Modal -->
+  <template if:true={showConfirmModal}>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+    <div class="slds-modal slds-fade-in-open">
+      <div class="slds-modal__container">
+        <div class="slds-modal__header">
+          <h2 class="slds-text-heading_medium">Confirm</h2>
+        </div>
+        <div class="slds-modal__content slds-p-around_large">
+          <p>{confirmModalMessage}</p>
+        </div>
+        <div class="slds-modal__footer">
+          <lightning-button
+            variant="neutral"
+            label="Cancel"
+            onclick={handleConfirmNo}
+            class="slds-m-right_small"
+          ></lightning-button>
+          <lightning-button
+            variant="brand"
+            label="Yes"
+            onclick={handleConfirmYes}
+          ></lightning-button>
+        </div>
+      </div>
+    </div>
+  </template>
+
   <!-- Success Modal -->
   <template if:true={showSuccessModal}>
     <div class="slds-backdrop slds-backdrop_open"></div>
@@ -144,17 +172,20 @@
                   >
                   </lightning-combobox>
                 </div>
-                <div class="slds-m-bottom_medium">
-                  <lightning-radio-group
-                    name="customerType"
-                    label="Customer Type"
-                    options={customerTypeOptions}
-                    value={customerType}
-                    type="radio"
-                    onchange={handleCustomerTypeChange}
-                  >
-                  </lightning-radio-group>
-                </div>
+                <template if:true={isMilbon}>
+                  <div class="slds-m-bottom_medium">
+                    <lightning-radio-group
+                      name="customerType"
+                      label="Customer Type"
+                      options={customerTypeOptions}
+                      value={customerType}
+                      type="radio"
+                      onchange={handleCustomerTypeChange}
+                    >
+                    </lightning-radio-group>
+                  </div>
+                </template>
+                <template if:true={isMilbon}>
                 <lightning-tabset
                   variant="scoped"
                   active-tab-value={activeProductTab}
@@ -298,9 +329,9 @@
                     <div class="selected-products">
                       <div class="selected-products-header">
                         <h4>Selected Special Products</h4>
-                        <span class="selected-products-pill"
-                          >{specialSelectedProducts.length} items</span
-                        >
+                        <span class="selected-products-pill">
+                          {specialTotalSelectedQty} items
+                        </span>
                       </div>
                       <div class="selected-products-list">
                         <template
@@ -330,29 +361,26 @@
                         </p>
                       </template>
                       <div class="order-total">
-                        <p>
+                        <p class="order-total-primary">
                           Required: <span>{specialRequiredCount} items</span>
                         </p>
-                      </div>
-                      <div
-                        class="submit-section slds-m-top_medium slds-grid slds-grid_align-spread"
-                      >
-                        <lightning-button
-                          variant="neutral"
-                          label="Save Form"
-                          onclick={handleSaveClick}
-                        ></lightning-button>
-                        <lightning-button
-                          variant="neutral"
-                          label="Clear Form"
-                          onclick={handleClearFormClick}
-                        ></lightning-button>
-                        <lightning-button
-                          variant="brand"
-                          label="Complete Form"
-                          onclick={handleCompleteClick}
-                          disabled={specialTabSubmitDisabled}
-                        ></lightning-button>
+                        <p class="order-total-secondary">
+                          Selected: <span>{specialTotalSelectedQty}</span>
+                        </p>
+                        <p class="order-total-secondary">
+                          Remaining: <span>{specialRemainingCount}</span>
+                        </p>
+                        <template if:true={specialRequirementMet}>
+                          <p class="special-requirement-status">
+                            {specialTabLabel} requirement satisfied.
+                          </p>
+                        </template>
+                        <template if:true={specialRequirementInProgress}>
+                          <p class="special-requirement-warning">
+                            Select {specialRemainingCount} more items to complete
+                            the {specialTabLabel} tab.
+                          </p>
+                        </template>
                       </div>
                     </div>
                     <div class="product-search">
@@ -420,6 +448,7 @@
                     </div>
                   </lightning-tab>
                 </lightning-tabset>
+                </template>
                 <template if:false={isMilbon}>
                   <div class="slds-text-color_weak slds-p-vertical_small">
                     Please select a form to begin.

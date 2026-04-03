@@ -5,6 +5,7 @@ import searchCustomers from "@salesforce/apex/SSG_CustomerSearch.searchCustomers
 import getUserInfo from "@salesforce/apex/SSG_CustomerSearch.getUserInfo";
 import getRelevantOrders from "@salesforce/apex/SSG_CustomerSearch.getRelevantOrders";
 import getProducts from "@salesforce/apex/SSG_CustomerSearch.getProducts";
+import getRedemptionItems from "@salesforce/apex/RedemptionItemsAdminController.getRedemptionItems";
 import submitOrders from "@salesforce/apex/RedemptionOrderService.submitOrders";
 import getAccountRepNumber from "@salesforce/apex/SSG_CustomerSearch.getAccountRepNumber";
 import getRecentRedemptionForms from "@salesforce/apex/RedemptionOrderService.getRecentRedemptionForms";
@@ -28,6 +29,10 @@ export default class RewardRedemptionForm extends LightningElement {
   @track savedForms = [];
   @track savedFormsLoading = false;
   @track showInfoMenu = false;
+  // Confirmation modal state
+  @track showConfirmModal = false;
+  @track confirmModalMessage = '';
+  _confirmAction = null;
   modalCloseTimer;
   formOptions = [
     { label: "Milbon", value: "MILBON" }
@@ -80,6 +85,31 @@ export default class RewardRedemptionForm extends LightningElement {
     if (this.isDiamond) return 30;
     if (this.isPlatinum) return 60;
     return "";
+  }
+
+  get specialTotalSelectedQty() {
+    return (this.specialSelectedProducts || []).reduce(
+      (sum, item) => sum + (item.qty || 0),
+      0
+    );
+  }
+
+  get specialRemainingCount() {
+    const required = Number(this.specialRequiredCount) || 0;
+    if (!required) {
+      return 0;
+    }
+    return Math.max(required - this.specialTotalSelectedQty, 0);
+  }
+
+  get specialRequirementMet() {
+    const required = Number(this.specialRequiredCount) || 0;
+    return required > 0 && this.specialRemainingCount === 0;
+  }
+
+  get specialRequirementInProgress() {
+    const required = Number(this.specialRequiredCount) || 0;
+    return required > 0 && this.specialRemainingCount > 0;
   }
   @track activeProductTab = "standard";
 
@@ -382,22 +412,31 @@ export default class RewardRedemptionForm extends LightningElement {
     return this.isDiamond || this.isPlatinum;
   }
 
-  // Special product search logic (replicates standard for now)
+  // Load special products from SSG_RedemptionItems__c by division + promoTier
   loadSpecialProducts() {
-    // If allProducts already loaded, copy them; otherwise they'll be
-    // populated when fetchProducts completes (see fetchProducts).
-    if (this.allProducts && this.allProducts.length > 0) {
-      this.isLoadingSpecialProducts = true;
-      this.specialAllProducts = this.allProducts.map((prod) => ({ ...prod }));
-      this.specialDisplayedProducts = this.specialAllProducts.map((prod) => ({
-        ...prod,
-        qty: 0
-      }));
-      this.isLoadingSpecialProducts = false;
-    } else {
-      // Products still loading – fetchProducts will fill special tab when done
-      this.isLoadingSpecialProducts = true;
-    }
+    const promoTier = this.isDiamond ? 'Diamond' : this.isPlatinum ? 'Platinum' : null;
+    if (!promoTier) return;
+    this.isLoadingSpecialProducts = true;
+    getRedemptionItems({ divisionId: 40, promoTier })
+      .then((result) => {
+        this.specialAllProducts = (result || []).map((item) => ({
+          productCode: item.itemId,
+          description: item.description,
+          unitPrice: item.unitPrice || 0
+        }));
+        this.specialDisplayedProducts = this.specialAllProducts.map((prod) => ({
+          ...prod,
+          qty: 0
+        }));
+      })
+      .catch((error) => {
+        console.error('Error loading special products:', error);
+        this.specialAllProducts = [];
+        this.specialDisplayedProducts = [];
+      })
+      .finally(() => {
+        this.isLoadingSpecialProducts = false;
+      });
   }
   handleSpecialProductSearchChange(event) {
     this.specialProductSearchTerm = event.target.value.toLowerCase();
@@ -448,41 +487,51 @@ export default class RewardRedemptionForm extends LightningElement {
   }
   handleSpecialProductQtyChange(event) {
     const productCode = event.target.dataset.code;
-    const newQty = parseInt(event.target.value, 10) || 0;
+    const desiredQty = parseInt(event.target.value, 10);
+    const required = Number(this.specialRequiredCount) || 0;
+    if (!required) {
+      return;
+    }
+    const sanitizedQty = Number.isNaN(desiredQty) ? 0 : Math.max(desiredQty, 0);
     const existing = this.specialSelectedProducts.find(
       (p) => p.productCode === productCode
     );
-    if (existing) {
-      existing.qty = newQty;
-    } else if (newQty > 0) {
+    const otherQty = (this.specialSelectedProducts || []).reduce(
+      (sum, p) => sum + (p.productCode === productCode ? 0 : p.qty),
+      0
+    );
+    const allowed = Math.max(required - otherQty, 0);
+    const finalQty = Math.min(sanitizedQty, allowed);
+
+    let updated = (this.specialSelectedProducts || []).filter(
+      (p) => p.productCode !== productCode
+    );
+    if (finalQty > 0) {
       const prod = this.specialAllProducts.find(
         (p) => p.productCode === productCode
       );
       if (prod) {
-        this.specialSelectedProducts.push({
-          productCode: prod.productCode,
-          description: prod.description,
-          qty: newQty,
-          uid: this.generateLineUid(prod.productCode)
-        });
+        updated = [
+          ...updated,
+          {
+            productCode: prod.productCode,
+            description: prod.description,
+            qty: finalQty,
+            uid: existing?.uid || this.generateLineUid(prod.productCode)
+          }
+        ];
       }
     }
-    // Remove if qty 0
-    this.specialSelectedProducts = this.specialSelectedProducts.filter(
-      (p) => p.qty > 0
-    );
-    // Update displayed products
-    this.specialDisplayedProducts = this.specialDisplayedProducts.map(
-      (prod) => {
-        const selected = this.specialSelectedProducts.find(
-          (s) => s.productCode === prod.productCode
-        );
-        return {
-          ...prod,
-          qty: selected ? selected.qty : 0
-        };
-      }
-    );
+    this.specialSelectedProducts = updated;
+    this.specialDisplayedProducts = this.specialDisplayedProducts.map((prod) => {
+      const selected = this.specialSelectedProducts.find(
+        (s) => s.productCode === prod.productCode
+      );
+      return {
+        ...prod,
+        qty: selected ? selected.qty : 0
+      };
+    });
   }
 
   get isSpecialSearchDisabled() {
@@ -494,9 +543,11 @@ export default class RewardRedemptionForm extends LightningElement {
 
   // Enforce item count for Platinum (60) and Diamond (30)
   get specialTabSubmitDisabled() {
-    if (this.isPlatinum) return this.specialSelectedProducts.length !== 60;
-    if (this.isDiamond) return this.specialSelectedProducts.length !== 30;
-    return false;
+    const required = Number(this.specialRequiredCount) || 0;
+    if (!required) {
+      return false;
+    }
+    return this.specialRemainingCount !== 0;
   }
 
   fetchProducts(division) {
@@ -511,15 +562,6 @@ export default class RewardRedemptionForm extends LightningElement {
           qty: 0,
           total: 0
         }));
-        // Also populate special tab if it's active
-        if (this.hasSpecialTab) {
-          this.specialAllProducts = this.allProducts.map((prod) => ({
-            ...prod
-          }));
-          this.specialDisplayedProducts = this.specialAllProducts.map(
-            (prod) => ({ ...prod, qty: 0 })
-          );
-        }
       })
       .catch((error) => {
         console.error("Error fetching products:", error);
@@ -627,17 +669,30 @@ export default class RewardRedemptionForm extends LightningElement {
     });
   }
 
+  // Confirmation modal helpers
+  openConfirmModal(message, action) {
+    this.confirmModalMessage = message;
+    this._confirmAction = action;
+    this.showConfirmModal = true;
+  }
+  handleConfirmYes() {
+    this.showConfirmModal = false;
+    if (this._confirmAction) {
+      this._confirmAction();
+    }
+    this._confirmAction = null;
+  }
+  handleConfirmNo() {
+    this.showConfirmModal = false;
+    this._confirmAction = null;
+  }
+
   // Clear the current form selections
   handleClearFormClick() {
-    /* eslint-disable no-alert */
-    if (
-      window.confirm(
-        "Are you sure you want to clear the form? All selections will be lost."
-      )
-    ) {
-      this.clearSelectedProducts();
-    }
-    /* eslint-enable no-alert */
+    this.openConfirmModal(
+      'Are you sure you want to clear the form? All selections will be lost.',
+      () => this.clearSelectedProducts()
+    );
   }
 
   clearSelectedProducts() {
@@ -684,12 +739,24 @@ export default class RewardRedemptionForm extends LightningElement {
         await this.fetchProducts("40");
       }
 
+      // Restore customer type (Diamond/Platinum) from saved header
+      const savedPromoTier = res.header?.promoTier;
+      if (savedPromoTier === 'DIAMOND' || savedPromoTier === 'PLATINUM') {
+        this.customerType = savedPromoTier;
+      } else {
+        this.customerType = 'NONE';
+      }
+
       const prodMap = {};
       (this.allProducts || []).forEach((p) => {
         prodMap[p.productCode] = p;
       });
 
-      const restored = (res.details || []).map((d, idx) => {
+      // Split details into standard vs special based on isSpecial flag
+      const standardDetails = (res.details || []).filter((d) => !d.isSpecial);
+      const specialDetails = (res.details || []).filter((d) => d.isSpecial);
+
+      const restoredStandard = standardDetails.map((d, idx) => {
         const prodMeta = prodMap[d.itemId];
         return {
           productCode: d.itemId,
@@ -701,7 +768,7 @@ export default class RewardRedemptionForm extends LightningElement {
           uid: this.generateLineUid(d.itemId || `saved-${idx}`)
         };
       });
-      this.selectedProducts = restored;
+      this.selectedProducts = restoredStandard;
 
       this.displayedProducts = (this.allProducts || []).map((prod) => {
         const sel = this.selectedProducts.find(
@@ -718,6 +785,40 @@ export default class RewardRedemptionForm extends LightningElement {
         (sum, p) => sum + (p.total || 0),
         0
       );
+
+      // Restore special tab items if Diamond/Platinum
+      if (this.isDiamond || this.isPlatinum) {
+        await this.loadSpecialProducts();
+        const restoredSpecial = specialDetails.map((d, idx) => ({
+          productCode: d.itemId,
+          description: d.itemId,
+          qty: d.quantity || 0,
+          uid: this.generateLineUid(d.itemId || `special-${idx}`)
+        }));
+        // Merge descriptions from loaded special products
+        this.specialSelectedProducts = restoredSpecial.map((item) => {
+          const match = this.specialAllProducts.find(
+            (p) => p.productCode === item.productCode
+          );
+          return {
+            ...item,
+            description: match ? match.description : item.description
+          };
+        });
+        // Update displayed products with restored qty
+        this.specialDisplayedProducts = this.specialAllProducts.map((prod) => {
+          const sel = this.specialSelectedProducts.find(
+            (s) => s.productCode === prod.productCode
+          );
+          return { ...prod, qty: sel ? sel.qty : 0 };
+        });
+        this.activeProductTab = 'special';
+      } else {
+        this.specialSelectedProducts = [];
+        this.specialAllProducts = [];
+        this.specialDisplayedProducts = [];
+        this.activeProductTab = 'standard';
+      }
 
       if (res.header && res.header.repNumber && !this.repNumberFromAccount) {
         this.repNumberFromAccount = res.header.repNumber;
@@ -832,34 +933,10 @@ export default class RewardRedemptionForm extends LightningElement {
       return;
     }
 
-    // Diamond/Platinum item count enforcement
-    if (this.isDiamond && this.specialSelectedProducts.length !== 30) {
-      this.dispatchEvent(
-        new ShowToastEvent({
-          title: "Diamond Item Requirement",
-          message:
-            "Diamond customers must select exactly 30 items in the Diamond Items tab.",
-          variant: "error"
-        })
-      );
-      return;
-    }
-    if (this.isPlatinum && this.specialSelectedProducts.length !== 60) {
-      this.dispatchEvent(
-        new ShowToastEvent({
-          title: "Platinum Item Requirement",
-          message:
-            "Platinum customers must select exactly 60 items in the Platinum Items tab.",
-          variant: "error"
-        })
-      );
-      return;
-    }
-
-    // Merge standard and special products for payload
+    // Merge standard and special products for payload (always merge both tabs)
     let validLines = (this.selectedProducts || []).filter(
       (p) => p.qty && p.qty > 0
-    );
+    ).map((p) => ({ ...p, isSpecial: false }));
     if (this.isDiamond || this.isPlatinum) {
       const specialLines = (this.specialSelectedProducts || [])
         .filter((p) => p.qty && p.qty > 0)
@@ -869,7 +946,8 @@ export default class RewardRedemptionForm extends LightningElement {
           unitPrice: 0,
           qty: p.qty,
           total: 0,
-          uid: p.uid
+          uid: p.uid,
+          isSpecial: true
         }));
       // Remove any duplicates by productCode
       const existingCodes = new Set(validLines.map((l) => l.productCode));
@@ -878,13 +956,34 @@ export default class RewardRedemptionForm extends LightningElement {
       );
     }
 
-    // For COMPLETE, enforce at least one line; for SAVED, allow zero lines if you later want drafts without lines.
-    if (
-      status === "COMPLETE" &&
-      validLines.length === 0 &&
-      !this.isDiamond &&
-      !this.isPlatinum
-    ) {
+    // Diamond/Platinum item count enforcement — only on COMPLETE, not SAVED
+    if (status === "COMPLETE") {
+      if (this.isDiamond && this.specialRemainingCount !== 0) {
+        this.dispatchEvent(
+          new ShowToastEvent({
+            title: "Diamond Item Requirement",
+            message:
+              "Diamond customers must select exactly 30 items in the Diamond Items tab before completing.",
+            variant: "error"
+          })
+        );
+        return;
+      }
+      if (this.isPlatinum && this.specialRemainingCount !== 0) {
+        this.dispatchEvent(
+          new ShowToastEvent({
+            title: "Platinum Item Requirement",
+            message:
+              "Platinum customers must select exactly 60 items in the Platinum Items tab before completing.",
+            variant: "error"
+          })
+        );
+        return;
+      }
+    }
+
+    // For COMPLETE, enforce at least one line across both tabs
+    if (status === "COMPLETE" && validLines.length === 0) {
       this.dispatchEvent(
         new ShowToastEvent({
           title: "Add products",
@@ -913,12 +1012,14 @@ export default class RewardRedemptionForm extends LightningElement {
         repNumber: this.repNumberFromAccount,
         formName: "Milbon",
         formStatus: status,
+        customerType: this.customerType || "NONE",
         lines: validLines.map((p) => ({
           itemId: p.productCode,
           quantity: p.qty,
           unitPrice: p.unitPrice || 0,
           message: null,
-          shipWithNext: null
+          shipWithNext: null,
+          isSpecial: p.isSpecial || false
         }))
       }
     ];
@@ -978,18 +1079,16 @@ export default class RewardRedemptionForm extends LightningElement {
   }
 
   handleSaveClick() {
-    /* eslint-disable no-alert */
-    if (window.confirm("Are you sure you want to save this form?")) {
-      this.handleSaveOrComplete("SAVED");
-    }
-    /* eslint-enable no-alert */
+    this.openConfirmModal(
+      'Are you sure you want to save this form?',
+      () => this.handleSaveOrComplete('SAVED')
+    );
   }
   handleCompleteClick() {
-    /* eslint-disable no-alert */
-    if (window.confirm("Are you sure you want to submit this form?")) {
-      this.handleSaveOrComplete("COMPLETE");
-    }
-    /* eslint-enable no-alert */
+    this.openConfirmModal(
+      'Are you sure you want to submit this form?',
+      () => this.handleSaveOrComplete('COMPLETE')
+    );
   }
 
   closeSuccessModal() {

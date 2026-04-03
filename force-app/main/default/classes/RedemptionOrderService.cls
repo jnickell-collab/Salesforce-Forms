@@ -29,6 +29,8 @@ public with sharing class RedemptionOrderService {
     public String message { get; set; }
     @AuraEnabled
     public String shipWithNext { get; set; } // Text(1) e.g., 'Y' or 'N' or null
+    @AuraEnabled
+    public Boolean isSpecial { get; set; } // true for Diamond/Platinum special tab items
   }
   public class OrderRequest {
     @AuraEnabled
@@ -43,6 +45,8 @@ public with sharing class RedemptionOrderService {
     public String currencyIsoCode { get; set; } // optional (multi-currency orgs)
     @AuraEnabled
     public String formStatus { get; set; } // 'SAVED' or 'COMPLETE' (optional; default COMPLETE)
+    @AuraEnabled
+    public String customerType { get; set; } // 'NONE', 'DIAMOND', 'PLATINUM'
   }
   public class LineResult {
     @AuraEnabled
@@ -93,6 +97,8 @@ public with sharing class RedemptionOrderService {
     public Datetime lastModifiedDate { get; set; }
     @AuraEnabled
     public String currencyIsoCode { get; set; }
+    @AuraEnabled
+    public String promoTier { get; set; }
   }
   public class LoadedDetail {
     @AuraEnabled
@@ -107,6 +113,8 @@ public with sharing class RedemptionOrderService {
     public String message { get; set; }
     @AuraEnabled
     public String shipWithNext { get; set; }
+    @AuraEnabled
+    public Boolean isSpecial { get; set; }
   }
   public class LoadFormResult {
     @AuraEnabled
@@ -196,7 +204,7 @@ public with sharing class RedemptionOrderService {
         det.ItemID__c = l.itemId;
         det.Quantity__c = l.quantity;
         det.ItemPrice__c = l.unitPrice;
-        det.Message__c = l.message;
+        det.Message__c = (l.isSpecial == true) ? 'SPECIAL' : l.message;
         det.ShipWithNext__c = l.shipWithNext;
         // PONumber__c will be set after we generate PO per order
         details.add(det);
@@ -219,6 +227,11 @@ public with sharing class RedemptionOrderService {
         ? 'COMPLETE'
         : req.formStatus.trim().toUpperCase();
       hdr.FormStatus__c = desiredStatus;
+      // Store promo tier (Diamond/Platinum) if provided
+      String promoTier = String.isBlank(req.customerType) ? 'NONE' : req.customerType.trim().toUpperCase();
+      if (promoTier != 'NONE') {
+        hdr.SSG_PromoTier__c = promoTier;
+      }
       if (
         Schema.sObjectType.RedemptionFormHeader__c.fields.CurrencyIsoCode.isCreateable() &&
         req.currencyIsoCode != null
@@ -442,7 +455,8 @@ public with sharing class RedemptionOrderService {
           OrderTotal__c,
           CreatedDate,
           LastModifiedDate,
-          CurrencyIsoCode
+          CurrencyIsoCode,
+          SSG_PromoTier__c
         FROM RedemptionFormHeader__c
         WHERE Id = :headerId
         LIMIT 1
@@ -475,6 +489,7 @@ public with sharing class RedemptionOrderService {
       lh.currencyIsoCode = (Schema.sObjectType.RedemptionFormHeader__c.fields.CurrencyIsoCode.isAccessible())
         ? String.valueOf(h.CurrencyIsoCode)
         : null;
+      lh.promoTier = h.SSG_PromoTier__c;
 
       for (RedemptionFormDetails__c d : dets) {
         LoadedDetail ld = new LoadedDetail();
@@ -484,6 +499,7 @@ public with sharing class RedemptionOrderService {
         ld.unitPrice = d.ItemPrice__c;
         ld.message = d.Message__c;
         ld.shipWithNext = d.ShipWithNext__c;
+        ld.isSpecial = (d.Message__c == 'SPECIAL');
         out.details.add(ld);
       }
 

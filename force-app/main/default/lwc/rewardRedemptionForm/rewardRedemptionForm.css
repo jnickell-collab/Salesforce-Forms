@@ -719,17 +719,50 @@ lightning-card .slds-card__header-title {
 }
 
 .order-total p {
+  margin: 0;
+}
+
+.order-total-primary {
   font-size: 1.4rem;
   font-weight: 700;
   color: #030712;
-  margin: 0;
   letter-spacing: -0.35px;
 }
 
-.order-total span {
+.order-total-primary span {
   color: #030712;
   font-size: 1.45rem;
   letter-spacing: -0.5px;
+}
+
+.order-total-secondary {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--primary-color);
+  margin-top: 0.35rem;
+}
+
+.order-total-secondary span {
+  font-size: 1.2rem;
+  color: #030712;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+}
+
+.special-requirement-status,
+.special-requirement-warning {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.special-requirement-status {
+  color: var(--success-color);
+}
+
+.special-requirement-warning {
+  color: var(--warning-color);
 }
 
 /* Submit Button */

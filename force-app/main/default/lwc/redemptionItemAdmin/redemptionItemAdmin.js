@@ -148,7 +148,8 @@ export default class RedemptionItemAdmin extends LightningElement {
         const itemsJson = JSON.stringify(
             toAdd.map((item) => ({
                 productCode: item.productCode,
-                description: item.description
+                description: item.description,
+                unitPrice: item.unitPrice
             }))
         );
         // eslint-disable-next-line no-console
@@ -223,7 +224,8 @@ export default class RedemptionItemAdmin extends LightningElement {
                 this.availableProducts = (available || []).map((item) => ({
                     productId: item.productId,
                     productCode: item.productCode,
-                    description: item.description
+                    description: item.description,
+                    unitPrice: item.unitPrice
                 }));
                 this.assignedItems = (assigned || []).map((item) => ({
                     redemptionId: item.redemptionId,

@@ -17,28 +17,29 @@ public with sharing class RedemptionItemsAdminController {
             excludedCodes.add(existing.SSG_ItemID__c);
         }
 
-        List<Product2> products;
-        String baseWhere = 'XC_ProductDivision__c = :divisionValue'
-            + ' AND XC_Usage__c = \'Retail\''
-            + ' AND (XC_ProductClass__c <> \'12\')'
-            + ' AND ProductCode != null AND ProductCode != \'\''
-            + ' AND IsActive = true';
+        List<PricebookEntry> entries;
+        String baseWhere = 'XC_ExternalId__c LIKE \'%|01\''
+            + ' AND Product2.XC_ProductDivision__c = :divisionValue'
+            + ' AND Product2.IsActive = true'
+            + ' AND Product2.XC_Usage__c = \'Retail\''
+            + ' AND Product2.ProductCode != null AND Product2.ProductCode != \'\''
+            + ' AND (Product2.XC_ProductClass__c <> \'12\')';
         if (excludedCodes.isEmpty()) {
-            products = Database.query(
-                'SELECT Id, ProductCode, XC_S2kDescription__c '
-                + 'FROM Product2 WHERE ' + baseWhere + ' ORDER BY ProductCode'
+            entries = Database.query(
+                'SELECT Product2.Id, Product2.ProductCode, Product2.XC_S2kDescription__c, UnitPrice '
+                + 'FROM PricebookEntry WHERE ' + baseWhere + ' ORDER BY Product2.ProductCode'
             );
         } else {
-            products = Database.query(
-                'SELECT Id, ProductCode, XC_S2kDescription__c '
-                + 'FROM Product2 WHERE ' + baseWhere + ' AND ProductCode NOT IN :excludedCodes ORDER BY ProductCode'
+            entries = Database.query(
+                'SELECT Product2.Id, Product2.ProductCode, Product2.XC_S2kDescription__c, UnitPrice '
+                + 'FROM PricebookEntry WHERE ' + baseWhere + ' AND Product2.ProductCode NOT IN :excludedCodes ORDER BY Product2.ProductCode'
             );
         }
 
         List<ProductPayload> result = new List<ProductPayload>();
-        for (Product2 prod : products) {
+        for (PricebookEntry pe : entries) {
             result.add(
-                new ProductPayload(prod.Id, prod.ProductCode, prod.XC_S2kDescription__c)
+                new ProductPayload(pe.Product2.Id, pe.Product2.ProductCode, pe.Product2.XC_S2kDescription__c, pe.UnitPrice)
             );
         }
         return result;
@@ -49,7 +50,7 @@ public with sharing class RedemptionItemsAdminController {
         if (divisionId == null) {
             return new List<RedemptionItemPayload>();
         }
-        String soql = 'SELECT Id, SSG_ItemID__c, SSG_ItemDescription__c FROM SSG_RedemptionItems__c WHERE SSG_DivisionID__c = :divisionId';
+        String soql = 'SELECT Id, SSG_ItemID__c, SSG_ItemDescription__c, SSG_UnitPrice__c FROM SSG_RedemptionItems__c WHERE SSG_DivisionID__c = :divisionId';
         if (promoTier != null && promoTier != '') {
             soql += ' AND SSG_PromoTier__c = :promoTier';
         } else {
@@ -60,7 +61,7 @@ public with sharing class RedemptionItemsAdminController {
         List<RedemptionItemPayload> result = new List<RedemptionItemPayload>();
         for (SSG_RedemptionItems__c row : rows) {
             result.add(
-                new RedemptionItemPayload(row.Id, row.SSG_ItemID__c, row.SSG_ItemDescription__c)
+                new RedemptionItemPayload(row.Id, row.SSG_ItemID__c, row.SSG_ItemDescription__c, row.SSG_UnitPrice__c)
             );
         }
         return result;
@@ -118,7 +119,8 @@ public with sharing class RedemptionItemsAdminController {
                     SSG_ItemID__c = normalizedCode,
                     SSG_ItemDescription__c = payload.description,
                     SSG_DivisionID__c = divisionId,
-                    SSG_PromoTier__c = promoTier
+                    SSG_PromoTier__c = promoTier,
+                    SSG_UnitPrice__c = payload.unitPrice
                 )
             );
         }
@@ -154,13 +156,15 @@ public with sharing class RedemptionItemsAdminController {
         @AuraEnabled public Id productId;
         @AuraEnabled public String productCode;
         @AuraEnabled public String description;
+        @AuraEnabled public Decimal unitPrice;
 
         public ProductPayload() {}
 
-        public ProductPayload(Id productId, String productCode, String description) {
+        public ProductPayload(Id productId, String productCode, String description, Decimal unitPrice) {
             this.productId = productId;
             this.productCode = productCode;
             this.description = description;
+            this.unitPrice = unitPrice;
         }
     }
 
@@ -168,25 +172,29 @@ public with sharing class RedemptionItemsAdminController {
         @AuraEnabled public Id redemptionId;
         @AuraEnabled public String itemId;
         @AuraEnabled public String description;
+        @AuraEnabled public Decimal unitPrice;
 
         public RedemptionItemPayload() {}
 
-        public RedemptionItemPayload(Id redemptionId, String itemId, String description) {
+        public RedemptionItemPayload(Id redemptionId, String itemId, String description, Decimal unitPrice) {
             this.redemptionId = redemptionId;
             this.itemId = itemId;
             this.description = description;
+            this.unitPrice = unitPrice;
         }
     }
 
     public class ItemPayload {
         @AuraEnabled public String productCode;
         @AuraEnabled public String description;
+        @AuraEnabled public Decimal unitPrice;
 
         public ItemPayload() {}
 
-        public ItemPayload(String productCode, String description) {
+        public ItemPayload(String productCode, String description, Decimal unitPrice) {
             this.productCode = productCode;
             this.description = description;
+            this.unitPrice = unitPrice;
         }
     }
 }
