@@ -1,55 +1,62 @@
+@import 'c/ssgMasterTheme';
+
+:host {
+    display: block;
+    font-family: var(--theme-font-family);
+}
+
 /* Back to Top floating button */
 .ssg-back-to-top {
     position: fixed;
     bottom: 32px;
     right: 32px;
     z-index: 1000;
-    background: #2563eb;
-    color: #fff;
+    background: var(--accent-color);
+    color: var(--surface-color);
     border: none;
     border-radius: 50%;
     width: 48px;
     height: 48px;
     font-size: 1.3rem;
     font-weight: bold;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+    box-shadow: var(--shadow-audit-button);
     cursor: pointer;
     transition: background 0.2s, box-shadow 0.2s;
     outline: none;
 }
 .ssg-back-to-top:hover {
-    background: #1e40af;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.22);
+    background: var(--primary-color);
+    box-shadow: var(--shadow-audit-button-hover);
 }
 .ssg-box-yellow {
-    background: #fffbe6 !important;
-    border-color: #ffe066 !important;
+    background: var(--warning-surface) !important;
+    border-color: var(--warning-border) !important;
 }
 .ssg-box-red {
-    background: #ffeaea !important;
-    border-color: #ff5c5c !important;
+    background: var(--danger-light) !important;
+    border-color: var(--danger-border) !important;
 }
 /* Professional, sleek, mobile-first styles for SSG_BoxAudit */
 .ssg-mobile-section {
     padding: 1.1rem 1rem 1rem 1rem;
     margin-bottom: 1.2rem;
-    background: linear-gradient(135deg, #f7fafc 60%, #e3e8ee 100%);
+    background: linear-gradient(135deg, var(--surface-muted) 60%, var(--bg-lighter) 100%);
     border-radius: 0.85rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.07), 0 1.5px 4px rgba(0,0,0,0.03);
-    border: 1.5px solid #e0e6ed;
+    box-shadow: var(--shadow-audit-card);
+    border: 1.5px solid var(--border-color);
     transition: box-shadow 0.2s;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
 }
 .ssg-mobile-section:hover {
-    box-shadow: 0 4px 16px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.07);
-    border-color: #b3b8c3;
+    box-shadow: var(--shadow-audit-card-hover);
+    border-color: var(--border-strong);
 }
 .ssg-mobile-label {
     font-weight: 600;
     font-size: 1.04rem;
-    color: #2d3748;
+    color: var(--text-secondary);
     margin-bottom: 0.13rem;
     letter-spacing: 0.01em;
     display: flex;
@@ -57,18 +64,18 @@
 }
 .ssg-mobile-value {
     font-size: 1.13rem;
-    color: #1a202c;
+    color: var(--text-primary);
     margin-left: 0.35em;
     font-weight: 500;
     word-break: break-word;
 }
 .ssg-mobile-s2k {
-    color: #3b82f6;
+    color: var(--accent-color);
     font-weight: 500;
     margin-top: 0.1rem;
 }
 .ssg-mobile-section:not(:last-child) {
-    border-bottom: 2px solid #e2e8f0;
+    border-bottom: 2px solid var(--border-light);
 }
 .ssg-mobile-section:last-child {
     margin-bottom: 0.5rem;
@@ -76,11 +83,11 @@
 .ssg-mobile-section h4 {
     font-size: 1.08rem;
     font-weight: 700;
-    color: #2563eb;
+    color: var(--accent-color);
     margin-bottom: 0.5rem;
 }
 .ssg-mobile-section .ssg-divider {
-    border-top: 1px solid #e2e8f0;
+    border-top: 1px solid var(--border-light);
     margin: 0.7rem 0 0.5rem 0;
 }
 .ssg-mobile-section .ssg-sku-row {
@@ -99,7 +106,7 @@
     margin-left: 0.2em;
 }
 .ssg-mobile-section .ssg-sku-row .ssg-mobile-s2k {
-    color: #0ea5e9;
+    color: var(--primary-lighter);
 }
 @media (min-width: 600px) {
     .ssg-mobile-section {
