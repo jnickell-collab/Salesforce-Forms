@@ -3,42 +3,98 @@
 :host {
     display: block;
     font-family: var(--theme-font-family);
+    /* Base font size for consistent typography across the component */
+    font-size: 14px;
+}
+
+.audit-card-title {
+    display: block;
+    text-align: center;
+    width: 100%;
+    margin: 0 0 0.75rem;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text-heading);
 }
 
 .audit-shell {
-    padding-bottom: 0;
+    padding: 0;
 }
 
 .audit-toolbar {
-    margin-bottom: 0;
+    margin: 0;
+    padding-inline: 0;
+    padding-block: 0;
+    background: transparent;
+    box-shadow: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    border-radius: 0;
+}
+
+.audit-input-block {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.audit-input-label {
+    margin: 0;
+    text-align: center;
+    font-size: inherit;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--text-heading);
 }
 
 .audit-actions {
-    gap: 1rem;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(6.5rem, 1fr));
+    align-items: stretch;
+    justify-content: center;
+    gap: 0.65rem;
+    margin-top: 0.85rem;
 }
 
-.audit-action-group {
-    flex-wrap: wrap;
+.audit-button-slot {
+    width: 100%;
+}
+
+.audit-button-slot lightning-button {
+    display: block;
+    width: 100%;
 }
 
 .audit-results {
-    margin: 1rem 1.5rem 1.5rem;
+    margin: 1rem 0 0;
+    padding-inline: 0;
+    padding-block: 0;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    border-radius: 0;
 }
 
 /* Back to Top floating button */
 .ssg-back-to-top {
     position: fixed;
-    bottom: 32px;
-    right: 32px;
+    bottom: 24px;
+    right: 24px;
     z-index: 1000;
     background: var(--accent-color);
     color: var(--surface-color);
     border: none;
     border-radius: 50%;
-    width: 48px;
-    height: 48px;
-    font-size: 1.3rem;
-    font-weight: bold;
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    line-height: 1;
+    font-weight: 700;
     box-shadow: var(--shadow-audit-button);
     cursor: pointer;
     transition: background 0.2s, box-shadow 0.2s;
@@ -58,91 +114,148 @@
 }
 /* Professional, sleek, mobile-first styles for SSG_BoxAudit */
 .ssg-mobile-section {
-    padding: 1.1rem 1rem 1rem 1rem;
-    margin-bottom: 1.2rem;
+    width: 100%;
+    padding: 0.65rem 0.75rem;
+    margin: 0 0 0.5rem;
     background: linear-gradient(135deg, var(--surface-muted) 60%, var(--bg-lighter) 100%);
     border-radius: 0.85rem;
     box-shadow: var(--shadow-audit-card);
-    border: 1.5px solid var(--border-color);
+    border: 1px solid var(--border-color);
     transition: box-shadow 0.2s;
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    gap: 0.28rem;
 }
 .ssg-mobile-section:hover {
     box-shadow: var(--shadow-audit-card-hover);
     border-color: var(--border-strong);
 }
-.ssg-mobile-label {
-    font-weight: 600;
-    font-size: 1.04rem;
-    color: var(--text-secondary);
-    margin-bottom: 0.13rem;
-    letter-spacing: 0.01em;
+
+.ssg-field-grid {
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    gap: 0.18rem;
 }
-.ssg-mobile-value {
-    font-size: 1.13rem;
-    color: var(--text-primary);
-    margin-left: 0.35em;
+
+.ssg-field-grid--identity {
+    margin-top: -0.1rem;
+    gap: 0.12rem;
+}
+
+.ssg-field-grid--metrics {
+    gap: 0.12rem;
+}
+
+.ssg-field-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: 0.35rem;
+    width: 100%;
+}
+
+.ssg-field-row--ticket {
+    padding-bottom: 0;
+}
+
+.ssg-field-row--stacked {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.08rem;
+}
+
+.ssg-field-row--full {
+    width: 100%;
+}
+
+.ssg-field-row--accent .ssg-field-label,
+.ssg-field-row--accent .ssg-field-value {
+    color: var(--brand-color-strong);
+}
+
+.ssg-field-label {
+    min-width: 0;
+    font-size: inherit;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--text-muted-strong);
+}
+
+/* Append a colon to every field label and section labels */
+.ssg-field-label::after,
+.ssg-section-label::after {
+    content: ":";
+    margin-left: 0.28rem;
+}
+
+/* keep the barcode input heading clean (no trailing colon) */
+.audit-input-label::after {
+    content: none;
+}
+
+.ssg-field-value {
+    min-width: 0;
+    font-size: inherit;
     font-weight: 500;
+    color: var(--text-primary);
+    text-align: right;
     word-break: break-word;
 }
-.ssg-mobile-s2k {
-    color: var(--accent-color);
+
+.ssg-field-value--stacked {
+    text-align: left;
     font-weight: 500;
-    margin-top: 0.1rem;
+    line-height: 1.2;
+    padding-left: 0.65rem;
 }
+
+.ssg-field-value--numeric {
+    min-width: 3ch;
+    font-variant-numeric: tabular-nums;
+}
+
 .ssg-mobile-section:not(:last-child) {
-    border-bottom: 2px solid var(--border-light);
+    border-bottom: 1px solid var(--border-light);
 }
 .ssg-mobile-section:last-child {
-    margin-bottom: 0.5rem;
-}
-.ssg-mobile-section h4 {
-    font-size: 1.08rem;
-    font-weight: 700;
-    color: var(--accent-color);
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.25rem;
 }
 .ssg-mobile-section .ssg-divider {
     border-top: 1px solid var(--border-light);
-    margin: 0.7rem 0 0.5rem 0;
+    margin: 0.08rem 0;
 }
-.ssg-mobile-section .ssg-sku-row {
+
+.ssg-s2k-group {
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem 1.2rem;
-    margin-bottom: 0.3rem;
+    flex-direction: column;
+    gap: 0.16rem;
 }
-.ssg-mobile-section .ssg-sku-row > div {
-    min-width: 120px;
+
+.ssg-section-label {
+    font-size: inherit;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent-color);
 }
-.ssg-mobile-section .ssg-sku-row .ssg-mobile-label {
-    margin-bottom: 0;
-}
-.ssg-mobile-section .ssg-sku-row .ssg-mobile-value {
-    margin-left: 0.2em;
-}
-.ssg-mobile-section .ssg-sku-row .ssg-mobile-s2k {
-    color: var(--brand-color-strong);
-}
+
 @media (min-width: 600px) {
     .ssg-mobile-section {
-        max-width: 500px;
-        margin-left: auto;
-        margin-right: auto;
+        max-width: none;
     }
 }
 
 @media (max-width: 768px) {
     .audit-actions {
-        flex-direction: column;
-        align-items: stretch;
+        grid-template-columns: repeat(3, minmax(5.5rem, 1fr));
+        gap: 0.55rem;
     }
 
     .audit-results {
-        margin: 0 1rem 1rem;
+        margin-top: 0.75rem;
+    }
+
+    .ssg-field-row {
+        gap: 0.3rem;
     }
 }
