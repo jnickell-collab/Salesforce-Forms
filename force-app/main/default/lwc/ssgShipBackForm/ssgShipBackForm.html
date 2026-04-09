@@ -1,0 +1,148 @@
+<template>
+    <lightning-card title="Ship Back Form">
+        <div class="theme-app-shell">
+
+            <!-- ── Top Info Section ── -->
+            <div class="theme-panel--soft theme-panel">
+                <div class="slds-grid slds-wrap slds-gutters">
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-bottom_small">
+                        <lightning-input
+                            type="number"
+                            label="Total Number Of Boxes"
+                            value={totalBoxes}
+                            onchange={handleTotalBoxesChange}
+                            min="0">
+                        </lightning-input>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-bottom_small">
+                        <fieldset>
+                            <legend class="radio-legend">Do You Need A Pallet?</legend>
+                            <lightning-radio-group
+                                name="palletNeeded"
+                                label="Do You Need A Pallet?"
+                                options={palletOptions}
+                                value={needPallet}
+                                onchange={handlePalletChange}
+                                type="radio"
+                                variant="label-hidden">
+                            </lightning-radio-group>
+                        </fieldset>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-bottom_small">
+                        <lightning-input
+                            label="Form Completed By (Name & Store #)"
+                            value={completedBy}
+                            onchange={handleCompletedByChange}
+                            placeholder="e.g. John Doe - Store 1234">
+                        </lightning-input>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Item Entry Bar ── -->
+            <div class="entry-bar theme-panel">
+                <div class="theme-section-title slds-m-bottom_small">Add Item</div>
+                <div class="slds-grid slds-wrap slds-gutters entry-bar-fields">
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_3-of-12 slds-p-bottom_small">
+                        <lightning-input
+                            label="Item Code"
+                            value={entryItemCode}
+                            onchange={handleEntryItemCode}
+                            placeholder="Enter item code">
+                        </lightning-input>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_2-of-12 slds-p-bottom_small">
+                        <lightning-input
+                            type="number"
+                            label="Quantity"
+                            value={entryQty}
+                            onchange={handleEntryQty}
+                            min="1"
+                            placeholder="Qty">
+                        </lightning-input>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_2-of-12 slds-p-bottom_small">
+                        <lightning-input
+                            type="number"
+                            label="Box Number"
+                            value={entryBoxNumber}
+                            onchange={handleEntryBoxNumber}
+                            min="1"
+                            placeholder="Box #">
+                        </lightning-input>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_3-of-12 slds-p-bottom_small">
+                        <lightning-combobox
+                            label="Category"
+                            value={entryCategory}
+                            options={categoryOptions}
+                            onchange={handleEntryCategory}
+                            placeholder="Select category">
+                        </lightning-combobox>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_2-of-12 slds-p-bottom_small add-btn-col">
+                        <lightning-button
+                            variant="brand"
+                            label="Add"
+                            onclick={handleAddItem}
+                            class="full-width-btn">
+                        </lightning-button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Category Cards ── -->
+            <div class="slds-grid slds-wrap slds-gutters category-cards">
+                <template for:each={categories} for:item="cat">
+                    <div key={cat.key} class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-bottom_medium">
+                        <div class="category-card theme-panel--lift theme-panel">
+                            <div class="category-card-header">
+                                <span class="category-card-title theme-section-title">{cat.label}</span>
+                                <span class="theme-pill">{cat.count} items</span>
+                            </div>
+                            <template if:true={cat.hasItems}>
+                                <div class="theme-scroll-surface category-table">
+                                    <table class="slds-table slds-table_bordered slds-table_cell-buffer">
+                                        <thead>
+                                            <tr>
+                                                <th scope="col">Item Code</th>
+                                                <th scope="col">Qty</th>
+                                                <th scope="col">Box #</th>
+                                                <th scope="col"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <template for:each={cat.items} for:item="item">
+                                                <tr key={item.id}>
+                                                    <td>{item.itemCode}</td>
+                                                    <td>{item.qty}</td>
+                                                    <td>{item.boxNumber}</td>
+                                                    <td>
+                                                        <lightning-button-icon
+                                                            icon-name="utility:delete"
+                                                            alternative-text="Remove"
+                                                            variant="bare"
+                                                            size="small"
+                                                            data-id={item.id}
+                                                            onclick={handleRemoveItem}>
+                                                        </lightning-button-icon>
+                                                    </td>
+                                                </tr>
+                                            </template>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </template>
+                            <template if:false={cat.hasItems}>
+                                <div class="theme-empty-state">
+                                    No items added yet
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+        </div>
+    </lightning-card>
+</template>

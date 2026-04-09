@@ -1,0 +1,8 @@
+{
+  "name": "StackedArea",
+  "description": "A cinematic stacked area chart extension with alternate series dimensions, fullscreen view, and data table — matching the MasterOfPie dark theme.",
+  "type": "visualization",
+  "version": "1.0.0",
+  "icon": "area-chart",
+  "author": "Jason Nickell"
+}

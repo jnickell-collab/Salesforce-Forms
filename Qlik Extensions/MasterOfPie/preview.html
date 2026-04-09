@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Master of Pie — Preview</title>
+  <link rel="stylesheet" href="MasterOfPie.css">
+  <style>
+    html, body { margin: 0; min-height: 100vh; background: #111113; }
+    .preview-container { width: 100vw; height: 100vh; }
+  </style>
+</head>
+<body>
+  <div class="preview-container">
+    <div class="mop-root" id="mop"></div>
+  </div>
+
+  <script src="renderer.js"></script>
+  <script>
+    var demo = {
+      title: "Master of Pie",
+      subtitle: "Preview with sample data — four donut charts in a single cinematic dashboard.",
+      containerWidth: window.innerWidth,
+      containerHeight: window.innerHeight,
+      charts: [
+        {
+          title: "Revenue by Region",
+          dimLabel: "Region",
+          measLabel: "Revenue",
+          data: [
+            { label: "North America", value: 42000 },
+            { label: "Europe", value: 31500 },
+            { label: "Asia Pacific", value: 28200 },
+            { label: "Latin America", value: 12800 },
+            { label: "Middle East", value: 8400 }
+          ]
+        },
+        {
+          title: "Users by Platform",
+          dimLabel: "Platform",
+          measLabel: "Users",
+          data: [
+            { label: "Desktop", value: 58000 },
+            { label: "Mobile", value: 72000 },
+            { label: "Tablet", value: 14500 },
+            { label: "Smart TV", value: 3200 }
+          ]
+        },
+        {
+          title: "Spend Categories",
+          dimLabel: "Department",
+          measLabel: "Spend",
+          data: [
+            { label: "Marketing", value: 24500 },
+            { label: "Engineering", value: 41200 },
+            { label: "Operations", value: 18700 },
+            { label: "Sales", value: 22300 },
+            { label: "Support", value: 9800 },
+            { label: "Research", value: 15600 }
+          ]
+        },
+        {
+          title: "Customer Segments",
+          dimLabel: "Segment",
+          measLabel: "Count",
+          data: [
+            { label: "Enterprise", value: 35000 },
+            { label: "Mid‑Market", value: 28000 },
+            { label: "SMB", value: 42000 },
+            { label: "Consumer", value: 18500 }
+          ]
+        }
+      ]
+    };
+
+    var root = document.getElementById("mop");
+    MasterOfPieRenderer.render(root, demo);
+
+    window.addEventListener("resize", function () {
+      demo.containerWidth = window.innerWidth;
+      demo.containerHeight = window.innerHeight;
+      MasterOfPieRenderer.render(root, demo);
+    });
+  </script>
+</body>
+</html>

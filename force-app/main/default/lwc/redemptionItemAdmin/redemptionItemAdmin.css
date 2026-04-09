@@ -12,11 +12,6 @@
 }
 
 .admin-shell {
-    background: linear-gradient(180deg, var(--surface-color) 0%, var(--bg-lighter) 100%);
-    border-radius: var(--radius-lg);
-    padding: 1.5rem;
-    border: 1px solid var(--border-color);
-    box-shadow: var(--shadow-xl);
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
@@ -35,7 +30,7 @@
     font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.3em;
-    color: var(--text-secondary);
+    color: var(--brand-color-strong);
 }
 
 .admin-header h2 {
@@ -45,9 +40,13 @@
 }
 
 .subtitle {
-    margin: 0;
-    color: var(--text-muted);
-    font-size: 0.95rem;
+    max-width: 56ch;
+}
+
+.form-hint {
+    margin-top: 0.5rem;
+    color: var(--text-secondary);
+    font-size: 0.82rem;
 }
 
 .form-selector {
@@ -116,8 +115,9 @@
 }
 
 .item-card_selected {
-    border-color: var(--accent-color);
-    background: var(--accent-contrast);
+    border-color: var(--brand-color);
+    background: linear-gradient(180deg, var(--brand-contrast) 0%, var(--surface-color) 100%);
+    box-shadow: 0 10px 24px rgba(132, 189, 0, 0.12);
 }
 
 .item-code {
@@ -166,6 +166,10 @@
     font-size: 0.9rem;
     color: var(--text-muted);
     text-align: center;
+}
+
+.admin-empty-state {
+    margin: 2rem 0;
 }
 
 @media (max-width: 960px) {

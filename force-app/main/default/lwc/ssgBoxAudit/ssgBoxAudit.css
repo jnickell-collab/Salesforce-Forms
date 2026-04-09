@@ -5,6 +5,26 @@
     font-family: var(--theme-font-family);
 }
 
+.audit-shell {
+    padding-bottom: 0;
+}
+
+.audit-toolbar {
+    margin-bottom: 0;
+}
+
+.audit-actions {
+    gap: 1rem;
+}
+
+.audit-action-group {
+    flex-wrap: wrap;
+}
+
+.audit-results {
+    margin: 1rem 1.5rem 1.5rem;
+}
+
 /* Back to Top floating button */
 .ssg-back-to-top {
     position: fixed;
@@ -106,12 +126,23 @@
     margin-left: 0.2em;
 }
 .ssg-mobile-section .ssg-sku-row .ssg-mobile-s2k {
-    color: var(--primary-lighter);
+    color: var(--brand-color-strong);
 }
 @media (min-width: 600px) {
     .ssg-mobile-section {
         max-width: 500px;
         margin-left: auto;
         margin-right: auto;
+    }
+}
+
+@media (max-width: 768px) {
+    .audit-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .audit-results {
+        margin: 0 1rem 1rem;
     }
 }

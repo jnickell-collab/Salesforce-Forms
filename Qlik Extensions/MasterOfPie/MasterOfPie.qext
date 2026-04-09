@@ -1,0 +1,8 @@
+{
+  "name": "MasterOfPie",
+  "description": "A cinematic quad-chart dashboard extension — four donut charts on a single dark-themed canvas with glowing accents and interactive legends.",
+  "type": "visualization",
+  "version": "1.0.0",
+  "icon": "piechart",
+  "author": "Jason Nickell"
+}

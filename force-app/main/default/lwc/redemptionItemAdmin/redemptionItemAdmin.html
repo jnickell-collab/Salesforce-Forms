@@ -1,11 +1,11 @@
 <template>
     <lightning-card class="admin-card">
-        <div class="admin-shell">
-            <header class="admin-header">
+        <div class="admin-shell theme-app-shell">
+            <header class="admin-header theme-app-header">
                 <div>
-                    <p class="kicker">Form Configurator</p>
-                    <h2>Item Assignment Portal</h2>
-                    <p class="subtitle">
+                    <p class="kicker theme-kicker">Form Configurator</p>
+                    <h2 class="theme-title">Item Assignment Portal</h2>
+                    <p class="subtitle theme-subtitle">
                         Map approved products to each redemption form and keep the live search list in sync.
                     </p>
                 </div>
@@ -130,7 +130,7 @@
             <p class="helper-text">Shift+click to range-select or Ctrl+click (Cmd+click on Mac) to toggle multiple items before moving them.</p>
             </template>
             <template if:false={selectedForm}>
-                <div class="empty-state" style="text-align:center; margin:2rem 0;">Please select a form to begin assigning items.</div>
+                <div class="empty-state theme-empty-state admin-empty-state">Please select a form to begin assigning items.</div>
             </template>
         </div>
     </lightning-card>
