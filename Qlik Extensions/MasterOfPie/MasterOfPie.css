@@ -1,0 +1,822 @@
+/* ═══════════════════════════════════════════════════════════════
+   Master of Pie — Quad‑Chart Dashboard
+   Dark cinematic theme with neon accents
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* ── Root ─────────────────────────────────────────────────────── */
+
+.mop-root {
+  width: 100%;
+  height: 100%;
+}
+
+.mop-shell {
+  --mop-bg-a: #111113;
+  --mop-bg-b: #19191d;
+  --mop-surface: rgba(255, 255, 255, 0.04);
+  --mop-surface-hover: rgba(255, 255, 255, 0.07);
+  --mop-border: rgba(255, 255, 255, 0.07);
+  --mop-border-hover: rgba(255, 255, 255, 0.14);
+  --mop-text: #84bd00;
+  --mop-text-muted: rgba(240, 240, 244, 0.62);
+  --mop-text-dim: rgba(240, 240, 244, 0.38);
+
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 20px;
+  border: 1px solid var(--mop-border);
+  background: linear-gradient(180deg, var(--mop-bg-a), var(--mop-bg-b));
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.35);
+  color: var(--mop-text);
+  font-family: "Aptos Display", "Segoe UI Variable Display", "Inter", "Helvetica Neue", sans-serif;
+}
+
+/* ── Decorative backdrop (subtle) ─────────────────────────────── */
+
+.mop-backdrop,
+.mop-aurora,
+.mop-sparks {
+  display: none;
+}
+
+/* ── Header ───────────────────────────────────────────────────── */
+
+.mop-header {
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1.5rem;
+  padding: 1.6rem 1.75rem 0;
+}
+
+.mop-kicker {
+  margin: 0 0 0.35rem;
+  color: var(--mop-text-dim);
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.mop-header h2 {
+  margin: 0;
+  font-size: clamp(1.3rem, 2.5vw, 2.2rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: #84bd00;
+}
+
+.mop-subtitle {
+  max-width: 64ch;
+  margin: 0.5rem 0 0;
+  color: var(--mop-text-muted);
+  line-height: 1.5;
+  font-size: 0.92rem;
+}
+
+.mop-total-badge {
+  flex-shrink: 0;
+  padding: 0.85rem 1.1rem;
+  border-radius: 14px;
+  border: 1px solid var(--mop-border);
+  background: var(--mop-surface);
+  text-align: right;
+}
+
+.mop-total-badge span,
+.mop-total-badge small {
+  display: block;
+  color: var(--mop-text-muted);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+.mop-total-badge strong {
+  display: block;
+  margin: 0.2rem 0 0.25rem;
+  font-size: 1.6rem;
+  line-height: 1;
+  color: #84bd00;
+}
+
+/* ── Grid ─────────────────────────────────────────────────────── */
+
+.mop-grid {
+  flex: 1 1 0%;
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 1rem;
+  padding: 1rem 1.75rem 1.75rem;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* ── Chart Card ───────────────────────────────────────────────── */
+
+.mop-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border-radius: 16px;
+  border: 1px solid var(--mop-border);
+  background: rgba(255, 255, 255, 0.025);
+  overflow: hidden;
+  transition: border-color 200ms ease, background 200ms ease;
+  min-height: 0;
+}
+
+.mop-card:hover {
+  border-color: var(--mop-border-hover);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.mop-card-header {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem 0;
+}
+
+.mop-card-title {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #84bd00;
+}
+
+.mop-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.mop-card-tbl-btn {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--mop-border);
+  border-radius: 8px;
+  background: var(--mop-surface);
+  color: var(--mop-text-muted);
+  cursor: pointer;
+  transition: background 180ms ease, color 180ms ease, border-color 180ms ease;
+  padding: 0;
+}
+
+.mop-card-tbl-btn:hover,
+.mop-card-tbl-btn:focus {
+  background: var(--mop-surface-hover);
+  color: var(--mop-text);
+  border-color: var(--mop-border-hover);
+  outline: none;
+}
+
+.mop-card-value {
+  flex-shrink: 0;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.mop-card-body {
+  flex: 1 1 0%;
+  display: flex;
+  align-items: stretch;
+  gap: 0.75rem;
+  padding: 0.6rem 0.85rem 0.75rem;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ── Donut in card ────────────────────────────────────────────── */
+
+.mop-donut-wrap {
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46%;
+  max-width: 220px;
+  aspect-ratio: 1;
+}
+
+.mop-donut-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.mop-orbit {
+  display: none;
+}
+
+.mop-slice {
+  cursor: pointer;
+  stroke: var(--mop-bg-a);
+  stroke-width: 2;
+  transition: transform 200ms ease, filter 200ms ease;
+  animation: mopSliceReveal 500ms ease both;
+  animation-delay: var(--slice-delay, 0ms);
+  transform-origin: 110px 110px;
+}
+
+.mop-slice-group {
+  transform-origin: 110px 110px;
+  transition: transform 220ms ease;
+}
+
+.mop-slice-group.is-active {
+  transform: translate(var(--explode-x, 0), var(--explode-y, 0));
+}
+
+.mop-slice-group.is-active .mop-slice {
+  filter: brightness(1.15) saturate(1.1);
+}
+
+.mop-donut-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  text-align: center;
+  pointer-events: none;
+}
+
+.mop-donut-center-value {
+  font-size: clamp(0.85rem, 2vw, 1.4rem);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.mop-donut-center-label {
+  font-size: clamp(0.5rem, 0.7vw, 0.62rem);
+  color: var(--mop-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+/* ── Legend in card ────────────────────────────────────────────── */
+
+.mop-legend {
+  flex: 1 1 0%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  overflow-y: auto;
+  min-width: 0;
+  max-height: 100%;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(132, 189, 0, 0.4) transparent;
+}
+
+.mop-legend::-webkit-scrollbar {
+  width: 6px;
+}
+
+.mop-legend::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.mop-legend::-webkit-scrollbar-thumb {
+  background: rgba(132, 189, 0, 0.4);
+  border-radius: 3px;
+}
+
+.mop-legend::-webkit-scrollbar-thumb:hover {
+  background: rgba(132, 189, 0, 0.65);
+}
+
+.mop-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 180ms ease;
+  min-width: 0;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+.mop-legend-item > * {
+  pointer-events: none;
+}
+
+.mop-legend-item:hover,
+.mop-legend-item:focus,
+.mop-legend-item.is-active {
+  background: var(--mop-surface-hover);
+  outline: none;
+}
+
+.mop-legend-dot {
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.mop-legend-label {
+  flex: 1 1 0%;
+  font-size: 0.78rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mop-legend-pct {
+  flex-shrink: 0;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--mop-text-muted);
+}
+
+.mop-legend-bar {
+  flex-shrink: 0;
+  width: 40px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+
+.mop-legend-bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+}
+
+/* ── Empty card state ─────────────────────────────────────────── */
+
+.mop-card_empty .mop-card-body {
+  justify-content: center;
+  color: var(--mop-text-dim);
+  font-size: 0.85rem;
+}
+
+/* ── Responsive: tight ────────────────────────────────────────── */
+
+.mop-shell_tight .mop-grid {
+  gap: 0.65rem;
+  padding: 0.65rem 1rem 1rem;
+}
+
+.mop-shell_tight .mop-header {
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem 1rem 0;
+}
+
+.mop-shell_tight .mop-total-badge {
+  text-align: left;
+}
+
+.mop-shell_tight .mop-card {
+  border-radius: 14px;
+}
+
+.mop-shell_tight .mop-card-header {
+  padding: 0.65rem 0.75rem 0;
+}
+
+.mop-shell_tight .mop-card-body {
+  padding: 0.4rem 0.65rem 0.55rem;
+}
+
+.mop-shell_tight .mop-legend-item {
+  padding: 0.25rem 0.4rem;
+}
+
+/* ── Responsive: stacked (very narrow) ────────────────────────── */
+
+.mop-shell_stacked .mop-grid {
+  grid-template-columns: 1fr;
+  grid-template-rows: repeat(4, minmax(160px, 1fr));
+  overflow-y: auto;
+}
+
+.mop-shell_stacked .mop-card-body {
+  flex-direction: row;
+}
+
+/* ── Responsive: micro ────────────────────────────────────────── */
+
+.mop-shell_micro .mop-donut-wrap {
+  width: 38%;
+}
+
+.mop-shell_micro .mop-legend-bar {
+  display: none;
+}
+
+.mop-shell_micro .mop-card-title {
+  font-size: 0.78rem;
+}
+
+/* ── Data Table Modal ─────────────────────────────────────────── */
+
+.mop-modal-overlay {
+  display: none;
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  background: rgba(4, 8, 18, 0.82);
+  backdrop-filter: blur(8px);
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  animation: mopFadeIn 220ms ease;
+}
+
+.mop-modal-overlay.is-open {
+  display: flex;
+}
+
+.mop-modal {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 720px;
+  max-height: 82vh;
+  border-radius: 18px;
+  border: 1px solid var(--mop-border-hover);
+  background: #1a1a1e;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  animation: mopModalIn 250ms ease;
+}
+
+.mop-modal-header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.4rem 1.5rem 1rem;
+  border-bottom: 1px solid var(--mop-border);
+}
+
+.mop-modal-header > div:first-child {
+  flex: 1;
+}
+
+.mop-modal-kicker {
+  margin: 0 0 0.2rem;
+  color: var(--mop-text-dim);
+  font-size: 0.64rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.mop-modal-title {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.mop-modal-stats {
+  display: flex;
+  gap: 0.9rem;
+  flex-shrink: 0;
+}
+
+.mop-modal-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.15rem;
+}
+
+.mop-modal-stat em {
+  font-style: normal;
+  font-size: 0.64rem;
+  color: var(--mop-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.mop-modal-stat strong {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.mop-modal-close {
+  position: absolute;
+  top: 0.85rem;
+  right: 0.85rem;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--mop-border);
+  border-radius: 10px;
+  background: var(--mop-surface);
+  color: var(--mop-text-muted);
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: background 180ms ease, color 180ms ease;
+  padding: 0;
+  line-height: 1;
+}
+
+.mop-modal-close:hover {
+  background: var(--mop-surface-hover);
+  color: var(--mop-text);
+}
+
+.mop-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem 1.5rem 1.5rem;
+}
+
+/* ── Styled Table ─────────────────────────────────────────────── */
+
+.mop-tbl {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 0.3rem;
+  font-size: 0.84rem;
+}
+
+.mop-tbl thead th {
+  padding: 0.5rem 0.6rem;
+  color: var(--mop-text-dim);
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  text-align: left;
+  border-bottom: 1px solid var(--mop-border);
+  position: sticky;
+  top: 0;
+  background: #1a1a1e;
+  z-index: 1;
+}
+
+.mop-tbl-row {
+  animation: mopRowIn 400ms ease both;
+}
+
+.mop-tbl-row td {
+  padding: 0.6rem 0.6rem;
+  background: var(--mop-surface);
+  border-top: 1px solid rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  transition: background 160ms ease;
+}
+
+.mop-tbl-row td:first-child {
+  border-radius: 10px 0 0 10px;
+  border-left: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.mop-tbl-row td:last-child {
+  border-radius: 0 10px 10px 0;
+  border-right: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+/* ── Fullscreen Chart Overlay ─────────────────────────────────── */
+
+.mop-fs-overlay {
+  display: none;
+  position: absolute;
+  inset: 0;
+  z-index: 110;
+  background: rgba(4, 8, 18, 0.92);
+  backdrop-filter: blur(12px);
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  animation: mopFadeIn 220ms ease;
+}
+
+.mop-fs-overlay.is-open {
+  display: flex;
+}
+
+.mop-fs-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 18px;
+  border: 1px solid var(--mop-border-hover);
+  background: #1a1a1e;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  animation: mopModalIn 250ms ease;
+}
+
+.mop-fs-header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.2rem 1.5rem;
+  border-bottom: 1px solid var(--mop-border);
+}
+
+.mop-fs-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #84bd00;
+}
+
+.mop-fs-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  padding: 1.5rem 2rem;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.mop-fs-donut-wrap {
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50%;
+  max-width: 440px;
+  aspect-ratio: 1;
+}
+
+.mop-fs-legend {
+  flex: 1 1 0%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  overflow-y: auto;
+  min-width: 0;
+  max-height: 100%;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(132, 189, 0, 0.4) transparent;
+}
+
+.mop-fs-legend::-webkit-scrollbar { width: 6px; }
+.mop-fs-legend::-webkit-scrollbar-track { background: transparent; }
+.mop-fs-legend::-webkit-scrollbar-thumb { background: rgba(132, 189, 0, 0.4); border-radius: 3px; }
+
+.mop-fs-legend .mop-legend-item {
+  padding: 0.6rem 0.75rem;
+  font-size: 0.92rem;
+}
+
+.mop-fs-legend .mop-legend-dot {
+  width: 14px;
+  height: 14px;
+}
+
+.mop-fs-legend .mop-legend-label {
+  font-size: 0.92rem;
+}
+
+.mop-fs-legend .mop-legend-pct {
+  font-size: 0.88rem;
+}
+
+.mop-legend-value {
+  flex-shrink: 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--mop-text-muted);
+  margin-left: 0.3rem;
+}
+
+.mop-tbl-row:hover td {
+  background: var(--mop-surface-hover);
+}
+
+.mop-tbl-rank {
+  width: 36px;
+  text-align: center;
+  color: var(--mop-text-dim);
+  font-weight: 700;
+}
+
+.mop-tbl-color {
+  width: 28px;
+  text-align: center;
+}
+
+.mop-tbl-color span {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+.mop-tbl-label {
+  font-weight: 500;
+}
+
+.mop-tbl-value {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.mop-tbl-pct {
+  text-align: right;
+  font-weight: 700;
+  color: var(--mop-text-muted);
+  width: 64px;
+}
+
+.mop-tbl-bar {
+  width: 100px;
+}
+
+.mop-tbl-bar-track {
+  display: block;
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+
+.mop-tbl-bar-track i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+}
+
+.mop-tbl tfoot td {
+  padding: 0.7rem 0.6rem;
+  border-top: 1px solid var(--mop-border-hover);
+  color: var(--mop-text);
+}
+
+/* ── Keyframes ────────────────────────────────────────────────── */
+
+@keyframes mopFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes mopModalIn {
+  from { opacity: 0; transform: scale(0.94) translateY(12px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes mopRowIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes mopSliceReveal {
+  from { opacity: 0; transform: scale(0.82); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+

@@ -1,0 +1,53 @@
+@import 'c/ssgMasterTheme';
+
+/* ── Entry bar: align the Add button to bottom ── */
+.entry-bar .add-btn-col {
+    display: flex;
+    align-items: flex-end;
+}
+
+.entry-bar .full-width-btn {
+    width: 100%;
+}
+
+/* ── Radio legend styling ── */
+.radio-legend {
+    font-size: 0.875rem;
+    font-weight: 400;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+/* ── Category cards ── */
+.category-cards {
+    margin-top: 1rem;
+}
+
+.category-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.category-card-title {
+    font-size: 1.05rem;
+}
+
+.category-table {
+    max-height: 280px;
+}
+
+.category-table th {
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted-strong);
+    background: var(--bg-light);
+}
+
+.category-table td {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+}

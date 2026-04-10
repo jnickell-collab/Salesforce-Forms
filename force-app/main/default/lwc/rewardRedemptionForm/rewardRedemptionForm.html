@@ -11,17 +11,18 @@
           <p>{confirmModalMessage}</p>
         </div>
         <div class="slds-modal__footer">
-          <lightning-button
-            variant="neutral"
-            label="Cancel"
-            onclick={handleConfirmNo}
-            class="slds-m-right_small"
-          ></lightning-button>
-          <lightning-button
-            variant="brand"
-            label="Yes"
-            onclick={handleConfirmYes}
-          ></lightning-button>
+          <div class="theme-modal-actions">
+            <lightning-button
+              variant="neutral"
+              label="Cancel"
+              onclick={handleConfirmNo}
+            ></lightning-button>
+            <lightning-button
+              variant="brand"
+              label="Yes"
+              onclick={handleConfirmYes}
+            ></lightning-button>
+          </div>
         </div>
       </div>
     </div>
@@ -32,7 +33,7 @@
     <div class="slds-backdrop slds-backdrop_open"></div>
     <div class="slds-modal slds-fade-in-open">
       <div class="slds-modal__container">
-        <div class="slds-modal__header slds-theme_success">
+        <div class="slds-modal__header success-modal-header">
           <h2 class="slds-text-heading_medium" id="modal-heading-id">
             <lightning-icon
               icon-name="utility:success"
@@ -44,7 +45,7 @@
         </div>
         <div class="slds-modal__content slds-p-around_large">
           <p class="slds-m-bottom_small">{modalMessage}</p>
-          <div class="slds-box slds-theme_shade slds-p-around_medium">
+          <div class="slds-box success-modal-details slds-p-around_medium">
             <p><strong>PO Number:</strong> {successMessage.poNumber}</p>
             <p><strong>Customer:</strong> {successMessage.accountName}</p>
             <p><strong>Order Total:</strong> {modalOrderTotal}</p>
@@ -53,12 +54,14 @@
             Redirecting to new order...
           </p>
         </div>
-        <div class="slds-modal__footer slds-theme_default">
-          <lightning-button
-            variant="brand"
-            label="Acknowledged"
-            onclick={closeSuccessModal}
-          ></lightning-button>
+        <div class="slds-modal__footer">
+          <div class="theme-modal-actions">
+            <lightning-button
+              variant="brand"
+              label="Acknowledged"
+              onclick={closeSuccessModal}
+            ></lightning-button>
+          </div>
         </div>
       </div>
     </div>
@@ -66,7 +69,7 @@
 
   <lightning-card>
     <div class="slds-p-around_medium">
-      <div class="customer-search-section">
+      <div class="customer-search-section theme-responsive-panel">
         <button
           type="button"
           class="hamburger-trigger"
@@ -95,14 +98,7 @@
           ></lightning-input>
           <template if:true={showDropdown}>
             <div
-              class="slds-box slds-theme_default slds-is-absolute"
-              style="
-                z-index: 999;
-                width: 100%;
-                max-height: 300px;
-                overflow-y: auto;
-                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-              "
+              class="theme-dropdown-surface customer-search-dropdown slds-is-absolute"
             >
               <template if:true={isSearching}>
                 <div
@@ -118,8 +114,7 @@
                 <template for:each={searchResults} for:item="cust">
                   <div
                     key={cust.accountId}
-                    class="slds-p-around_small slds-border_bottom slds-theme_default"
-                    style="cursor: pointer"
+                    class="theme-dropdown-item customer-search-dropdown-item"
                     onclick={handleSelect}
                     data-id={cust.customerId}
                   >
@@ -145,7 +140,7 @@
       <template if:true={selectedCustomer}>
         <div class="slds-grid slds-wrap slds-gutters">
           <div class="slds-col slds-size_1-of-1 slds-medium-size_4-of-12">
-            <div class="customer-summary">
+            <div class="customer-summary theme-panel theme-panel--soft theme-panel--lift theme-responsive-panel">
               <div class="customer-summary-header">
                 <h3>Account Summary</h3>
               </div>
@@ -157,8 +152,8 @@
             </div>
           </div>
           <div class="slds-col slds-size_1-of-1 slds-medium-size_8-of-12">
-            <div class="products-section">
-              <div class="form-selector">
+            <div class="products-section theme-panel theme-responsive-panel">
+              <div class="form-selector theme-panel theme-panel--frosted theme-responsive-panel">
                 <div class="form-selector-header">
                   <div class="form-selector-header-copy">
                     <h3>Redemption Form</h3>
@@ -176,7 +171,8 @@
                   </lightning-combobox>
                 </div>
                 <template if:true={hasSelectedForm}>
-                  <div class="slds-m-top_medium">
+                  <div class="theme-control-stack slds-m-top_medium">
+                    <div>
                     <lightning-radio-group
                       name="shipWithNext"
                       label="Ship With Next?"
@@ -186,9 +182,9 @@
                       onchange={handleShipWithNextChange}
                     >
                     </lightning-radio-group>
-                  </div>
+                    </div>
                   <template if:true={showShipToStore}>
-                    <div class="slds-m-top_small">
+                    <div>
                       <lightning-radio-group
                         name="shipToStore"
                         label="Ship To Store?"
@@ -200,7 +196,7 @@
                       </lightning-radio-group>
                     </div>
                     <template if:true={showStoreToShipToMessage}>
-                      <div class="slds-m-top_small">
+                      <div>
                         <lightning-combobox
                           name="storeToShipToMessage"
                           label="Store to Ship To:"
@@ -213,9 +209,11 @@
                       </div>
                     </template>
                   </template>
+                  </div>
                 </template>
                 <template if:true={isMilbon}>
-                  <div class="slds-m-bottom_medium">
+                  <div class="theme-control-stack slds-m-bottom_medium">
+                    <div>
                     <lightning-radio-group
                       name="customerType"
                       label="Customer Type"
@@ -225,6 +223,7 @@
                       onchange={handleCustomerTypeChange}
                     >
                     </lightning-radio-group>
+                    </div>
                   </div>
                 </template>
                 <template if:true={inlineError}>
@@ -234,22 +233,23 @@
                   </div>
                 </template>
                 <template if:true={hasSelectedForm}>
+                <div class="theme-tabset-shell">
                 <lightning-tabset
                   variant="scoped"
                   active-tab-value={activeProductTab}
                   onchange={handleProductTabChange}
                 >
                   <lightning-tab label="Standard Items" value="standard">
-                    <div class="selected-products">
+                    <div class="selected-products theme-panel theme-panel--feature theme-responsive-panel">
                       <div class="selected-products-header">
                         <h4>Selected Products</h4>
-                        <span class="selected-products-pill"
+                        <span class="selected-products-pill theme-pill"
                           >{selectedProducts.length} items</span
                         >
                       </div>
                       <div class="selected-products-list">
                         <template for:each={selectedProducts} for:item="line">
-                          <article key={line.uid} class="selected-item-card">
+                          <article key={line.uid} class="selected-item-card theme-item-card">
                             <div class="selected-item-info">
                               <p class="selected-product-code">
                                 {line.productCode}
@@ -277,7 +277,7 @@
                           Add products below to start your cart.
                         </p>
                       </template>
-                      <div class="order-total">
+                      <div class="order-total theme-stat-box theme-responsive-panel">
                         <p>Total: <span>$ {grandTotal}</span></p>
                       </div>
                       <div
@@ -300,7 +300,7 @@
                         ></lightning-button>
                       </div>
                     </div>
-                    <div class="product-search">
+                    <div class="product-search theme-search-surface theme-responsive-panel">
                       <lightning-input
                         type="search"
                         placeholder="Search by product code or description..."
@@ -318,7 +318,7 @@
                       >
                       </lightning-button>
                     </div>
-                    <div class="product-list">
+                    <div class="product-list theme-scroll-surface">
                       <template if:true={isLoadingProducts}>
                         <div class="loading-spinner">
                           <lightning-spinner
@@ -374,10 +374,10 @@
                     value="special"
                     if:true={hasSpecialTab}
                   >
-                    <div class="selected-products">
+                    <div class="selected-products theme-panel theme-panel--feature theme-responsive-panel">
                       <div class="selected-products-header">
                         <h4>Selected Special Products</h4>
-                        <span class="selected-products-pill">
+                        <span class="selected-products-pill theme-pill">
                           {specialTotalSelectedQty} items
                         </span>
                       </div>
@@ -386,7 +386,7 @@
                           for:each={specialSelectedProducts}
                           for:item="line"
                         >
-                          <article key={line.uid} class="selected-item-card">
+                          <article key={line.uid} class="selected-item-card theme-item-card">
                             <div class="selected-item-info">
                               <p class="selected-product-code">
                                 {line.productCode}
@@ -408,7 +408,7 @@
                           Add special products below to start your cart.
                         </p>
                       </template>
-                      <div class="order-total">
+                      <div class="order-total theme-stat-box theme-responsive-panel">
                         <p class="order-total-primary">
                           Required: <span>{specialRequiredCount} items</span>
                         </p>
@@ -431,7 +431,7 @@
                         </template>
                       </div>
                     </div>
-                    <div class="product-search">
+                    <div class="product-search theme-search-surface theme-responsive-panel">
                       <lightning-input
                         type="search"
                         placeholder="Search by product code or description..."
@@ -449,7 +449,7 @@
                       >
                       </lightning-button>
                     </div>
-                    <div class="product-list">
+                    <div class="product-list theme-scroll-surface">
                       <template if:true={isLoadingSpecialProducts}>
                         <div class="loading-spinner">
                           <lightning-spinner
@@ -496,6 +496,7 @@
                     </div>
                   </lightning-tab>
                 </lightning-tabset>
+                </div>
                 </template>
                 <template if:false={hasSelectedForm}>
                   <div class="slds-text-color_weak slds-p-vertical_small">
@@ -508,9 +509,7 @@
         </div>
       </template>
       <template if:false={selectedCustomer}>
-        <div
-          class="slds-text-align_center slds-p-around_large slds-theme_shade"
-        >
+        <div class="theme-empty-state">
           <p>Please search and select a customer to begin the order.</p>
         </div>
       </template>

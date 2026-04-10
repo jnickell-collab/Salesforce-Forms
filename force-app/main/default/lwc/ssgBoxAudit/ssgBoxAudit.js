@@ -4,6 +4,10 @@ import getBoxAudit from '@salesforce/apex/SsgBoxAudit.getBoxAudit';
 
 export default class SsgBoxAudit extends LightningElement {
 
+    get hasItemDetails() {
+        return Array.isArray(this.itemDetails) && this.itemDetails.length > 0;
+    }
+
     barcodeScanner;
 
     connectedCallback() {

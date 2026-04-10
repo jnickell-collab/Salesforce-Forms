@@ -1,51 +1,96 @@
 <template>
-    <lightning-card title="Box Audit">
-        <div class="slds-p-around_medium">
-            <lightning-input label="Scan or Enter Barcode" value={barcode} onchange={handleBarcodeChange} onkeyup={handleBarcodeKeyup} placeholder="Scan barcode here..." data-barcode-input></lightning-input>
-            <div class="slds-m-top_medium slds-grid slds-grid_align-spread slds-grid_vertical-align-center">
-                <div class="slds-grid slds-grid_vertical-align-center slds-gutters">
-                    <lightning-button label="Search" onclick={handleSearch}></lightning-button>
-                    <lightning-button label="Clear" onclick={handleClear}></lightning-button>
+    <lightning-card class="audit-card">
+        <div class="audit-card-title">Box Audit</div>
+        <div class="audit-shell">
+            <div class="audit-toolbar theme-panel theme-panel--soft theme-panel--lift theme-responsive-panel">
+                <div class="audit-input-block">
+                    <p class="audit-input-label">Scan or Enter Barcode</p>
+                    <lightning-input label="Scan or Enter Barcode" variant="label-hidden" value={barcode} onchange={handleBarcodeChange} onkeyup={handleBarcodeKeyup} placeholder="Scan barcode here..." data-barcode-input></lightning-input>
                 </div>
-                <lightning-button variant="brand" icon-name="utility:scan" label="Scan" onclick={beginScanning}></lightning-button>
+                <div class="audit-actions">
+                    <div class="audit-button-slot">
+                        <lightning-button class="audit-action-button" label="Search" onclick={handleSearch}></lightning-button>
+                    </div>
+                    <div class="audit-button-slot">
+                        <lightning-button class="audit-action-button" label="Clear" onclick={handleClear}></lightning-button>
+                    </div>
+                    <div class="audit-button-slot">
+                        <lightning-button class="audit-action-button" variant="brand" icon-name="utility:scan" label="Scan" onclick={beginScanning}></lightning-button>
+                    </div>
+                </div>
             </div>
         </div>
-
-
-
-        <template if:true={itemDetails}>
-            <div class="slds-m-top_medium">
+        <template if:true={hasItemDetails}>
+            <div class="audit-results theme-panel theme-panel--feature theme-responsive-panel slds-m-top_medium">
                 <template for:each={itemDetails} for:item="item">
                     <div key={item.id} class={item.cardClass}>
-                        <h4>Pick Ticket ID: <span class="ssg-mobile-value">{item.pickTicketId}</span></h4>
-                        <div class="ssg-sku-row">
-                            <div class="ssg-mobile-label">SKU:<span class="ssg-mobile-value">{item.sku}</span></div>
-                            <div class="ssg-mobile-label">Description:<span class="ssg-mobile-value">{item.skuDescription}</span></div>
+                        <div class="ssg-field-row ssg-field-row--ticket">
+                            <span class="ssg-field-label">Pick Ticket ID</span>
+                            <span class="ssg-field-value ssg-field-value--numeric">{item.pickTicketId}</span>
                         </div>
-                        <div class="ssg-sku-row">
-                            <div class="ssg-mobile-label">UPC:<span class="ssg-mobile-value">{item.upc}</span></div>
+                        <div class="ssg-field-grid ssg-field-grid--identity">
+                            <div class="ssg-field-row">
+                                <span class="ssg-field-label">SKU</span>
+                                <span class="ssg-field-value">{item.sku}</span>
+                            </div>
+                            <div class="ssg-field-row ssg-field-row--full">
+                                <span class="ssg-field-label">UPC</span>
+                                <span class="ssg-field-value">{item.upc}</span>
+                            </div>
+                            <div class="ssg-field-row ssg-field-row--stacked ssg-field-row--full">
+                                <span class="ssg-field-label">Description</span>
+                                <span class="ssg-field-value ssg-field-value--stacked">{item.skuDescription}</span>
+                            </div>
                         </div>
-                        <div class="ssg-sku-row">
-                            <div class="ssg-mobile-label">Qty To Pick:<span class="ssg-mobile-value">{item.qtyToPick}</span></div>
-                            <div class="ssg-mobile-label">Qty Picked:<span class="ssg-mobile-value">{item.qtyPicked}</span></div>
-                            <div class="ssg-mobile-label">HL Qty Picked:<span class="ssg-mobile-value">{item.hlQtyPicked}</span></div>
+
+                        <div class="ssg-field-grid ssg-field-grid--metrics">
+                            <div class="ssg-field-row">
+                                <span class="ssg-field-label">Qty To Pick</span>
+                                <span class="ssg-field-value ssg-field-value--numeric">{item.qtyToPick}</span>
+                            </div>
+                            <div class="ssg-field-row">
+                                <span class="ssg-field-label">Qty Picked</span>
+                                <span class="ssg-field-value ssg-field-value--numeric">{item.qtyPicked}</span>
+                            </div>
+                            <div class="ssg-field-row">
+                                <span class="ssg-field-label">Holds Qty Picked</span>
+                                <span class="ssg-field-value ssg-field-value--numeric">{item.hlQtyPicked}</span>
+                            </div>
                         </div>
-                        <div class="ssg-sku-row">
-                            <div class="ssg-mobile-label">Holds Available Qty:<span class="ssg-mobile-value">{item.holdsAvailableQty}</span></div>
-                            <div class="ssg-mobile-label">WHS Location:<span class="ssg-mobile-value">{item.whsLocation}</span></div>
+
+                        <div class="ssg-field-grid">
+                            <div class="ssg-field-row">
+                                <span class="ssg-field-label">Holds Available Qty</span>
+                                <span class="ssg-field-value ssg-field-value--numeric">{item.holdsAvailableQty}</span>
+                            </div>
+                            <div class="ssg-field-row">
+                                <span class="ssg-field-label">WHS Location</span>
+                                <span class="ssg-field-value">{item.whsLocation}</span>
+                            </div>
                         </div>
                         <div class="ssg-divider"></div>
-                        <div class="ssg-sku-row">
-                            <div class="ssg-mobile-label ssg-mobile-s2k">S2K On Hand:<span class="ssg-mobile-value">{item.s2kOnHand}</span></div>
-                            <div class="ssg-mobile-label ssg-mobile-s2k">S2K Committed:<span class="ssg-mobile-value">{item.s2kCommitted}</span></div>
-                            <div class="ssg-mobile-label ssg-mobile-s2k">S2K Available:<span class="ssg-mobile-value">{item.s2kAvailable}</span></div>
+
+                        <div class="ssg-s2k-group">
+                            <div class="ssg-section-label">S2K</div>
+                            <div class="ssg-field-grid ssg-field-grid--metrics">
+                                <div class="ssg-field-row ssg-field-row--accent">
+                                    <span class="ssg-field-label">On Hand</span>
+                                    <span class="ssg-field-value ssg-field-value--numeric">{item.s2kOnHand}</span>
+                                </div>
+                                <div class="ssg-field-row ssg-field-row--accent">
+                                    <span class="ssg-field-label">Committed</span>
+                                    <span class="ssg-field-value ssg-field-value--numeric">{item.s2kCommitted}</span>
+                                </div>
+                                <div class="ssg-field-row ssg-field-row--accent">
+                                    <span class="ssg-field-label">Available</span>
+                                    <span class="ssg-field-value ssg-field-value--numeric">{item.s2kAvailable}</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </template>
             </div>
         </template>
-        <button if:true={showBackToTop} class="ssg-back-to-top" onclick={scrollToTop} title="Back to Top">
-            ↑ Top
-        </button>
+        <button if:true={showBackToTop} class="ssg-back-to-top" onclick={scrollToTop} title="Back to Top" aria-label="Back to Top">↑</button>
     </lightning-card>
 </template>
