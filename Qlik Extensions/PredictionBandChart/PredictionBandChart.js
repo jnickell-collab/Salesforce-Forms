@@ -345,9 +345,6 @@ define([
         min: 1,
         max: 1
       },
-      sorting: {
-        uses: "sorting"
-      },
       settings: {
         uses: "settings"
       },
@@ -462,6 +459,19 @@ define([
             type: "string",
             defaultValue: "#b8b8b8"
           }
+          ,
+          yAxisMin: {
+            ref: "props.yAxisMin",
+            label: "Y Axis Minimum (optional)",
+            type: "number",
+            expression: "optional"
+          },
+          yAxisMax: {
+            ref: "props.yAxisMax",
+            label: "Y Axis Maximum (optional)",
+            type: "number",
+            expression: "optional"
+          }
         }
       }
     }
@@ -479,7 +489,6 @@ define([
         qDimensions: [],
         qMeasures: [],
         qInitialDataFetch: [{ qWidth: 2, qHeight: 5000 }],
-        qInterColumnSortOrder: [0],
         qSuppressMissing: true
       }
     },
@@ -556,6 +565,8 @@ define([
         filterMin: Number.isFinite(host.__pbcFilterMin)
           ? host.__pbcFilterMin
           : undefined,
+        yAxisMin: Number.isFinite(props.yAxisMin) ? props.yAxisMin : undefined,
+        yAxisMax: Number.isFinite(props.yAxisMax) ? props.yAxisMax : undefined,
         onToggleExcludeWeekends: function () {
           host.__pbcExcludeWeekends = !host.__pbcExcludeWeekends;
           if (host.__pbcConfig)

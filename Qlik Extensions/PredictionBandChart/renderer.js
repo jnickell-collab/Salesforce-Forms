@@ -492,9 +492,27 @@
 
     if (!Number.isFinite(yMin)) yMin = 0;
     if (!Number.isFinite(yMax)) yMax = 1;
-    var yPad = (yMax - yMin) * 0.08 || 1;
-    yMin -= yPad;
-    yMax += yPad;
+    // Allow explicit axis overrides from properties (skip padding when applied)
+    var overrideMin = Number.isFinite(cfg.yAxisMin);
+    var overrideMax = Number.isFinite(cfg.yAxisMax);
+    if (overrideMin || overrideMax) {
+      var newMin = overrideMin ? cfg.yAxisMin : yMin;
+      var newMax = overrideMax ? cfg.yAxisMax : yMax;
+      // Only apply if valid range
+      if (Number.isFinite(newMin) && Number.isFinite(newMax) && newMax > newMin) {
+        yMin = newMin;
+        yMax = newMax;
+        var yPad = 0;
+      } else {
+        var yPad = (yMax - yMin) * 0.08 || 1;
+        yMin -= yPad;
+        yMax += yPad;
+      }
+    } else {
+      var yPad = (yMax - yMin) * 0.08 || 1;
+      yMin -= yPad;
+      yMax += yPad;
+    }
     var yRange = yMax - yMin;
 
     var n = data.length;
