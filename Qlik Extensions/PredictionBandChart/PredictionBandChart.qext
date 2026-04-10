@@ -1,0 +1,8 @@
+{
+  "name": "PredictionBandChart",
+  "description": "A prediction band line chart that displays Mean, Median, Min, Max, and ±1σ bands with toggle between Min/Max and StdDev shading.",
+  "type": "visualization",
+  "version": "1.0.0",
+  "icon": "line-chart",
+  "author": "Jason Nickell"
+}
