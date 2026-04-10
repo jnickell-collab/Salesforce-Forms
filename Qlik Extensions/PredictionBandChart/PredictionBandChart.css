@@ -1,21 +1,36 @@
 /* ── PredictionBandChart Qlik Extension Theme ─────────────── */
 
 :root {
-  --pbc-bg-start:   #111113;
-  --pbc-bg-end:     #19191d;
-  --pbc-card-bg:    rgba(30, 30, 34, 0.92);
-  --pbc-accent:     #84bd00;
-  --pbc-text:       #84bd00;
-  --pbc-text-dim:   rgba(132, 189, 0, 0.5);
-  --pbc-border:     rgba(132, 189, 0, 0.12);
-  --pbc-radius:     12px;
-  --pbc-glass:      rgba(132, 189, 0, 0.06);
+  --pbc-bg-start: #111113;
+  --pbc-bg-end: #19191d;
+  --pbc-card-bg: rgba(30, 30, 34, 0.92);
+  --pbc-accent: #84bd00;
+  --pbc-text: #84bd00;
+  --pbc-text-dim: rgba(132, 189, 0, 0.5);
+  --pbc-border: rgba(132, 189, 0, 0.12);
+  --pbc-radius: 12px;
+  --pbc-glass: rgba(132, 189, 0, 0.06);
+}
+
+.pbc-root.pbc-theme-light {
+  --pbc-bg-start: #f5f6f7;
+  --pbc-bg-end: #eef1f4;
+  --pbc-card-bg: rgba(255, 255, 255, 0.94);
+  --pbc-accent: #6aa000;
+  --pbc-text: #365200;
+  --pbc-text-dim: rgba(54, 82, 0, 0.6);
+  --pbc-border: rgba(54, 82, 0, 0.16);
+  --pbc-glass: rgba(106, 160, 0, 0.08);
 }
 
 /* ── Shell & Background ───────────────────────────────────── */
 
 .pbc-root,
-.pbc-root * { box-sizing: border-box; margin: 0; padding: 0; }
+.pbc-root * {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
 .pbc-root {
   width: 100%;
@@ -55,6 +70,11 @@
   text-shadow: 0 0 12px rgba(132, 189, 0, 0.3);
 }
 
+.pbc-root.pbc-theme-light .pbc-title,
+.pbc-root.pbc-theme-light .pbc-stat-label {
+  text-shadow: none;
+}
+
 /* ── Toggle button ────────────────────────────────────────── */
 
 .pbc-toggle {
@@ -67,7 +87,9 @@
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s, box-shadow 0.2s;
+  transition:
+    background 0.2s,
+    box-shadow 0.2s;
 }
 
 .pbc-toggle:hover {
@@ -84,6 +106,47 @@
   flex-shrink: 0;
 }
 
+.pbc-menu-shell {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.pbc-menu-btn {
+  min-width: 36px;
+  padding: 5px 10px;
+}
+
+.pbc-menu-pop {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 140px;
+  padding: 6px;
+  border: 1px solid var(--pbc-border);
+  border-radius: 8px;
+  background: var(--pbc-card-bg);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
+  z-index: 20;
+}
+
+.pbc-menu-item {
+  width: 100%;
+  display: block;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--pbc-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.pbc-menu-item:hover,
+.pbc-menu-item.is-active {
+  background: var(--pbc-glass);
+}
+
 /* ── Filter input ─────────────────────────────────────────── */
 
 .pbc-filter-input {
@@ -97,6 +160,7 @@
   font-family: inherit;
   outline: none;
   transition: border-color 0.2s;
+  appearance: textfield;
   -moz-appearance: textfield;
 }
 
@@ -124,7 +188,9 @@
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s, box-shadow 0.2s;
+  transition:
+    background 0.2s,
+    box-shadow 0.2s;
 }
 
 .pbc-calc-btn:hover {
@@ -148,39 +214,6 @@
 
 .pbc-clear-btn:hover {
   background: rgba(255, 82, 82, 0.22);
-}
-
-/* ── Fullscreen button ────────────────────────────────────── */
-
-.pbc-fs-btn {
-  flex-shrink: 0;
-  padding: 4px 8px;
-  border: 1px solid var(--pbc-border);
-  border-radius: 6px;
-  background: var(--pbc-glass);
-  color: var(--pbc-text);
-  font-size: 14px;
-  cursor: pointer;
-  line-height: 1;
-  transition: background 0.2s, box-shadow 0.2s;
-}
-
-.pbc-fs-btn:hover {
-  background: rgba(132, 189, 0, 0.15);
-  box-shadow: 0 0 8px rgba(132, 189, 0, 0.25);
-}
-
-/* ── Fullscreen state (CSS-based overlay) ──────────────────── */
-
-.pbc-shell.pbc-fullscreen {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 99999;
-  background: linear-gradient(145deg, var(--pbc-bg-start), var(--pbc-bg-end));
-  padding: 16px 20px;
 }
 
 /* ── Legend ────────────────────────────────────────────────── */
@@ -226,6 +259,57 @@
   min-height: 0;
   display: flex;
   position: relative;
+}
+
+.pbc-table-wrap {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow: auto;
+  border: 1px solid var(--pbc-border);
+  border-radius: 10px;
+  background: var(--pbc-card-bg);
+}
+
+.pbc-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 780px;
+}
+
+.pbc-table th,
+.pbc-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--pbc-border);
+  color: var(--pbc-text-dim);
+  font-size: 12px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.pbc-table th {
+  position: sticky;
+  top: 0;
+  background: linear-gradient(145deg, var(--pbc-bg-start), var(--pbc-bg-end));
+  color: var(--pbc-text);
+  font-weight: 700;
+  z-index: 1;
+}
+
+.pbc-table td:first-child,
+.pbc-table th:first-child {
+  position: sticky;
+  left: 0;
+  background: var(--pbc-card-bg);
+  z-index: 1;
+}
+
+.pbc-table th:first-child {
+  background: linear-gradient(145deg, var(--pbc-bg-start), var(--pbc-bg-end));
+  z-index: 2;
+}
+
+.pbc-table tbody tr:hover td {
+  background: var(--pbc-glass);
 }
 
 .pbc-yaxis {
@@ -299,4 +383,35 @@
   color: var(--pbc-accent);
   letter-spacing: 0.3px;
   text-shadow: 0 0 8px rgba(132, 189, 0, 0.3);
+}
+
+/* ── Tooltip ───────────────────────────────────────────── */
+.pbc-tooltip {
+  position: absolute;
+  z-index: 100000;
+  background: rgba(17, 17, 19, 0.96);
+  color: var(--pbc-text);
+  border: 1px solid var(--pbc-border);
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  white-space: nowrap;
+}
+.pbc-tooltip .pbc-tooltip-title {
+  font-weight: 700;
+  display: block;
+  margin-bottom: 4px;
+  color: var(--pbc-accent);
+}
+.pbc-tooltip .pbc-tooltip-line {
+  display: block;
+  color: var(--pbc-text-dim);
+}
+
+.pbc-root.pbc-theme-light .pbc-tooltip {
+  background: rgba(255, 255, 255, 0.96);
+  color: var(--pbc-text);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
 }

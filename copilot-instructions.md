@@ -5,10 +5,10 @@ This file makes the project's assistant guidance discoverable to tools and agent
 Follow these rules when working in this workspace:
 
 - Read and follow the guidance in `assistant-principles.md` and `execution-playbook.md` before making edits.
-- Prefer shared sources and tokens (for example `c/cssLibrary`) when modifying styles.
+- Prefer shared sources and tokens (for example `ssgMasterTheme.css`) when modifying styles.
 - Keep changes minimal and clearly documented in commit messages and PR descriptions.
 
-- CSS Rule: Always reference the shared theme tokens in `c/cssLibrary` (force-app/main/default/lwc/cssLibrary/cssLibrary.css) when making CSS changes; do NOT modify that file in PRs — coordinate and obtain explicit approval before changing it.
+- CSS Rule: Always reference the shared theme tokens in `ssgMasterTheme.css` (force-app/main/default/lwc/ssgMasterTheme/ssgMasterTheme.css) when making CSS changes; do NOT modify that file in PRs — coordinate and obtain explicit approval before changing it.
 
 Files to consult (source of truth):
 

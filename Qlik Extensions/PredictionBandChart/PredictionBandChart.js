@@ -10,7 +10,9 @@ define([
 
   function clearTimers(host) {
     if (host && host.__pbcTimers) {
-      host.__pbcTimers.forEach(function (id) { clearTimeout(id); });
+      host.__pbcTimers.forEach(function (id) {
+        clearTimeout(id);
+      });
       host.__pbcTimers = [];
     }
   }
@@ -26,8 +28,10 @@ define([
       var rect = host.getBoundingClientRect
         ? host.getBoundingClientRect()
         : { width: 0, height: 0 };
-      config.containerWidth  = Math.round(rect.width  || host.clientWidth  || 0);
-      config.containerHeight = Math.round(rect.height || host.clientHeight || 0);
+      config.containerWidth = Math.round(rect.width || host.clientWidth || 0);
+      config.containerHeight = Math.round(
+        rect.height || host.clientHeight || 0
+      );
       renderer.render(root, config);
     });
   }
@@ -35,7 +39,9 @@ define([
   function queueRenders(host) {
     clearTimers(host);
     host.__pbcTimers = [0, 80, 250, 500].map(function (d) {
-      return setTimeout(function () { scheduleRender(host); }, d);
+      return setTimeout(function () {
+        scheduleRender(host);
+      }, d);
     });
   }
 
@@ -45,12 +51,16 @@ define([
     host.__pbcBound = true;
 
     if (typeof ResizeObserver === "function") {
-      host.__pbcRO = new ResizeObserver(function () { queueRenders(host); });
+      host.__pbcRO = new ResizeObserver(function () {
+        queueRenders(host);
+      });
       host.__pbcRO.observe(host);
       if (host.parentElement) host.__pbcRO.observe(host.parentElement);
     }
 
-    host.__pbcWinResize = function () { queueRenders(host); };
+    host.__pbcWinResize = function () {
+      queueRenders(host);
+    };
     window.addEventListener("resize", host.__pbcWinResize);
 
     host.__pbcVisibility = function () {
@@ -76,7 +86,9 @@ define([
     var mean = sum / n;
 
     // Median
-    var sorted = values.slice().sort(function (a, b) { return a - b; });
+    var sorted = values.slice().sort(function (a, b) {
+      return a - b;
+    });
     var median;
     if (n % 2 === 0) {
       median = (sorted[n / 2 - 1] + sorted[n / 2]) / 2;
@@ -96,8 +108,32 @@ define([
 
   /* ── Extract & aggregate data by month ────────────────────── */
 
-  var MONTH_NAMES = ["Jan","Feb","Mar","Apr","May","Jun",
-                     "Jul","Aug","Sep","Oct","Nov","Dec"];
+  var MONTH_NAMES = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec"
+  ];
+
+  function qlikSerialToLocalDate(qNum) {
+    if (!Number.isFinite(qNum)) return null;
+    var wholeDays = Math.floor(qNum);
+    var utcDate = new Date(Date.UTC(1899, 11, 30 + wholeDays));
+    if (isNaN(utcDate.getTime())) return null;
+    return new Date(
+      utcDate.getUTCFullYear(),
+      utcDate.getUTCMonth(),
+      utcDate.getUTCDate()
+    );
+  }
 
   function parseNum(cell) {
     if (!cell) return NaN;
@@ -120,12 +156,10 @@ define([
     // 1. Try Qlik serial date number → JS Date
     var qNum = cell.qNum;
     if (Number.isFinite(qNum) && qNum > 1000) {
-      // Qlik epoch: 1899-12-30
-      var ms = (qNum - 25569) * 86400000; // convert to Unix ms
-      var d = new Date(ms);
+      var d = qlikSerialToLocalDate(qNum);
       if (!isNaN(d.getTime())) {
-        var yy = d.getUTCFullYear();
-        var mm = d.getUTCMonth(); // 0-based
+        var yy = d.getFullYear();
+        var mm = d.getMonth();
         return yy + "-" + (mm < 9 ? "0" : "") + (mm + 1);
       }
     }
@@ -153,11 +187,75 @@ define([
     return null;
   }
 
+  /**
+   * Convert a dimension cell to a JS Date if possible.
+   * Returns null when conversion fails.
+   */
+  function cellToDate(cell) {
+    if (!cell) return null;
+    var qNum = cell.qNum;
+    if (Number.isFinite(qNum) && qNum > 1000) {
+      return qlikSerialToLocalDate(qNum);
+    }
+    var txt = (cell.qText || "").trim();
+    if (!txt) return null;
+    // Try ISO or common formats
+    var iso = txt.match(/(\d{4})[\-\/]?(\d{1,2})[\-\/]?(\d{1,2})/);
+    if (iso) {
+      var y = parseInt(iso[1], 10);
+      var m = parseInt(iso[2], 10) - 1;
+      var day = parseInt(iso[3] || "1", 10);
+      var dd = new Date(y, m, day);
+      return isNaN(dd.getTime()) ? null : dd;
+    }
+    var parsed = new Date(txt);
+    if (isNaN(parsed.getTime())) return null;
+    // Normalize parsed dates to local midnight
+    return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+  }
+
   function monthKeyToLabel(key) {
     // key = "2024-01"
     var parts = key.split("-");
     var mi = parseInt(parts[1], 10) - 1;
     return MONTH_NAMES[mi] + " " + parts[0];
+  }
+
+  function formatDateKey(date) {
+    if (!date || isNaN(date.getTime())) return null;
+    var year = date.getFullYear();
+    var month = (date.getMonth() + 1).toString();
+    var day = date.getDate().toString();
+    if (month.length < 2) month = "0" + month;
+    if (day.length < 2) day = "0" + day;
+    return year + "-" + month + "-" + day;
+  }
+
+  function formatDateLabel(date, fallback) {
+    if (!date || isNaN(date.getTime())) return fallback || "";
+    return date.toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric"
+    });
+  }
+
+  function parseAnnotationEntries(raw) {
+    if (!raw || typeof raw !== "string") return [];
+    return raw
+      .split(/\r?\n|;/)
+      .map(function (entry) {
+        return entry.trim();
+      })
+      .filter(Boolean)
+      .map(function (entry) {
+        var parts = entry.split("|");
+        var dateKey = (parts.shift() || "").trim();
+        var message = parts.join("|").trim();
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey) || !message) return null;
+        return { dateKey: dateKey, message: message };
+      })
+      .filter(Boolean);
   }
 
   function getDateSortValue(cell) {
@@ -169,8 +267,8 @@ define([
   }
 
   /**
-   * Extract raw date points in ascending order.
-   * The main line stays at date grain; month grouping is used only for overlays.
+   * Extract and aggregate values to one point per invoice date.
+   * This keeps the plotted series and prediction overlays on the same daily grain.
    */
   function extractDateData(cube) {
     if (!cube) return [];
@@ -178,29 +276,44 @@ define([
     var rows = page ? page.qMatrix : [];
     if (!rows.length) return [];
 
-    var points = [];
+    var grouped = {};
 
     rows.forEach(function (row) {
-      var mKey = toMonthKey(row[0]);
-      if (!mKey) return;
+      var date = cellToDate(row[0]);
+      if (!date) return;
       var val = parseNum(row[1]);
       if (!Number.isFinite(val)) return;
 
-      points.push({
-        label: row[0] && row[0].qText ? row[0].qText : monthKeyToLabel(mKey),
-        value: val,
-        monthKey: mKey,
-        monthLabel: monthKeyToLabel(mKey),
-        sortValue: getDateSortValue(row[0])
-      });
+      var dateKey = formatDateKey(date);
+      if (!dateKey) return;
+      var monthKey = dateKey.slice(0, 7);
+
+      if (!grouped[dateKey]) {
+        grouped[dateKey] = {
+          label: formatDateLabel(date, row[0] && row[0].qText),
+          value: 0,
+          monthKey: monthKey,
+          monthLabel: monthKeyToLabel(monthKey),
+          sortValue: date.getTime(),
+          date: date,
+          dateKey: dateKey,
+          rowCount: 0
+        };
+      }
+
+      grouped[dateKey].value += val;
+      grouped[dateKey].rowCount += 1;
+    });
+
+    var points = Object.keys(grouped).map(function (key) {
+      return grouped[key];
     });
 
     points.sort(function (a, b) {
       if (Number.isFinite(a.sortValue) && Number.isFinite(b.sortValue)) {
         return a.sortValue - b.sortValue;
       }
-      if (a.monthKey !== b.monthKey) return a.monthKey < b.monthKey ? -1 : 1;
-      return a.label < b.label ? -1 : a.label > b.label ? 1 : 0;
+      return a.dateKey < b.dateKey ? -1 : a.dateKey > b.dateKey ? 1 : 0;
     });
 
     return points;
@@ -249,8 +362,9 @@ define([
             component: "buttongroup",
             defaultValue: "minmax",
             options: [
-              { value: "minmax",  label: "Min / Max" },
-              { value: "stddev", label: "Mean ± 1σ" }
+              { value: "minmax", label: "Empirical Bounds (pct)" },
+              { value: "stddev", label: "Pacing ± 1σ" },
+              { value: "regression", label: "Regression Bootstrap" }
             ]
           },
           chartTitle: {
@@ -278,29 +392,75 @@ define([
             defaultValue: 0.2,
             expression: "optional"
           },
-          meanLineColor: {
-            ref: "props.meanLineColor",
-            label: "Mean Line Color",
+          confidenceLevel: {
+            ref: "props.confidenceLevel",
+            label: "Confidence Level",
+            type: "number",
+            defaultValue: 0.95,
+            expression: "optional"
+          },
+          bootstrapIterations: {
+            ref: "props.bootstrapIterations",
+            label: "Bootstrap Iterations",
+            type: "number",
+            defaultValue: 500,
+            expression: "optional"
+          },
+          pacingLineColor: {
+            ref: "props.pacingLineColor",
+            label: "Pacing Line Color",
             type: "string",
-            defaultValue: "#ff9f43"
+            defaultValue: "#e35a24"
           },
-          medianLineColor: {
-            ref: "props.medianLineColor",
-            label: "Median Line Color",
+          budgetValue: {
+            ref: "props.budgetValue",
+            label: "Budget Value",
+            type: "number",
+            defaultValue: 0,
+            expression: "optional"
+          },
+          showBudgetLine: {
+            ref: "props.showBudgetLine",
+            label: "Show Budget Line",
+            type: "boolean",
+            defaultValue: false
+          },
+          budgetLineColor: {
+            ref: "props.budgetLineColor",
+            label: "Budget Line Color",
             type: "string",
-            defaultValue: "#f15bb5"
+            defaultValue: "#44b3ff"
           },
-          showMeanLine: {
-            ref: "props.showMeanLine",
-            label: "Show Mean Line",
-            type: "boolean",
-            defaultValue: true
+          lastYearValue: {
+            ref: "props.lastYearValue",
+            label: "Last Year Value",
+            type: "number",
+            defaultValue: 0,
+            expression: "optional"
           },
-          showMedianLine: {
-            ref: "props.showMedianLine",
-            label: "Show Median Line",
+          showLastYearLine: {
+            ref: "props.showLastYearLine",
+            label: "Show Last Year Line",
             type: "boolean",
-            defaultValue: true
+            defaultValue: false
+          },
+          lastYearLineColor: {
+            ref: "props.lastYearLineColor",
+            label: "Last Year Line Color",
+            type: "string",
+            defaultValue: "#6e6e6e"
+          },
+          annotationEntries: {
+            ref: "props.annotationEntries",
+            label: "Comments (YYYY-MM-DD|Message)",
+            type: "string",
+            defaultValue: ""
+          },
+          annotationLineColor: {
+            ref: "props.annotationLineColor",
+            label: "Comment Line Color",
+            type: "string",
+            defaultValue: "#b8b8b8"
           }
         }
       }
@@ -336,52 +496,169 @@ define([
 
       var stats = calcStats(values);
       var props = layout.props || {};
+      var pendingZoomAnchor = host.__pbcZoomAnchor || null;
+      host.__pbcZoomAnchor = null;
+      var annotationEntriesText =
+        typeof host.__pbcAnnotationsText === "string"
+          ? host.__pbcAnnotationsText
+          : props.annotationEntries || "";
 
       var rect = host.getBoundingClientRect
         ? host.getBoundingClientRect()
         : { width: 0, height: 0 };
 
       host.__pbcConfig = {
-        title:          props.chartTitle     || "Prediction Band Chart",
-        bandMode:       props.bandMode       || "minmax",
-        lineColor:      props.lineColor      || "#84bd00",
-        bandColor:      props.bandColor      || "#44b3ff",
-        bandOpacity:    Number.isFinite(props.bandOpacity) ? props.bandOpacity : 0.2,
-        meanLineColor:  props.meanLineColor  || "#ff9f43",
-        medianLineColor:props.medianLineColor|| "#f15bb5",
-        showMeanLine:   props.showMeanLine !== false,
-        showMedianLine: props.showMedianLine !== false,
-        data:           data,
-        stats:          stats,
-        dimLabel:       getDimLabel(layout.qHyperCube),
-        measLabel:      getMeasLabel(layout.qHyperCube),
-        containerWidth: Math.round(rect.width  || host.clientWidth  || 0),
-        containerHeight:Math.round(rect.height || host.clientHeight || 0),
-        filterMin:      Number.isFinite(host.__pbcFilterMin) ? host.__pbcFilterMin : undefined,
+        title: props.chartTitle || "Prediction Band Chart",
+        theme: host.__pbcTheme === "light" ? "light" : "dark",
+        viewMode: host.__pbcViewMode === "table" ? "table" : "chart",
+        menuOpen: Boolean(host.__pbcMenuOpen),
+        bandMode: props.bandMode || "minmax",
+        lineColor: props.lineColor || "#84bd00",
+        bandColor: props.bandColor || "#44b3ff",
+        bandOpacity: Number.isFinite(props.bandOpacity)
+          ? props.bandOpacity
+          : 0.2,
+        pacingLineColor: props.pacingLineColor || "#e35a24",
+        budgetValue: Number.isFinite(props.budgetValue)
+          ? props.budgetValue
+          : null,
+        showBudgetLine: props.showBudgetLine === true,
+        budgetLineColor: props.budgetLineColor || "#44b3ff",
+        lastYearValue: Number.isFinite(props.lastYearValue)
+          ? props.lastYearValue
+          : null,
+        showLastYearLine: props.showLastYearLine === true,
+        lastYearLineColor: props.lastYearLineColor || "#6e6e6e",
+        annotations: parseAnnotationEntries(annotationEntriesText),
+        annotationLineColor: props.annotationLineColor || "#b8b8b8",
+        data: data,
+        stats: stats,
+        dimLabel: getDimLabel(layout.qHyperCube),
+        measLabel: getMeasLabel(layout.qHyperCube),
+        containerWidth: Math.round(rect.width || host.clientWidth || 0),
+        containerHeight: Math.round(rect.height || host.clientHeight || 0),
+        confidence: Number.isFinite(props.confidenceLevel)
+          ? props.confidenceLevel
+          : 0.95,
+        bootstrapIterations: Number.isFinite(props.bootstrapIterations)
+          ? props.bootstrapIterations
+          : 500,
+        zoomScale: Number.isFinite(host.__pbcZoomScale)
+          ? host.__pbcZoomScale
+          : 1,
+        zoomAnchor: pendingZoomAnchor,
+        excludeWeekends: Boolean(host.__pbcExcludeWeekends),
+        holidays: Array.isArray(host.__pbcHolidays)
+          ? host.__pbcHolidays
+          : host.__pbcHolidays
+            ? host.__pbcHolidays
+            : [],
+        filterMin: Number.isFinite(host.__pbcFilterMin)
+          ? host.__pbcFilterMin
+          : undefined,
+        onToggleExcludeWeekends: function () {
+          host.__pbcExcludeWeekends = !host.__pbcExcludeWeekends;
+          if (host.__pbcConfig)
+            host.__pbcConfig.excludeWeekends = Boolean(
+              host.__pbcExcludeWeekends
+            );
+          queueRenders(host);
+        },
+        onEditHolidays: function () {
+          // Ask user for comma-separated YYYY-MM-DD list
+          try {
+            var curr = Array.isArray(host.__pbcHolidays)
+              ? host.__pbcHolidays.join(",")
+              : host.__pbcHolidays || "";
+            var res = window.prompt(
+              "Enter holiday dates (comma-separated, YYYY-MM-DD):",
+              curr || ""
+            );
+            if (res !== null) {
+              var arr = res
+                .split(/[,;]+/)
+                .map(function (s) {
+                  return s.trim();
+                })
+                .filter(Boolean);
+              host.__pbcHolidays = arr;
+              if (host.__pbcConfig) host.__pbcConfig.holidays = arr;
+              queueRenders(host);
+            }
+          } catch (e) {
+            /* ignore */
+          }
+        },
+        onEditAnnotations: function () {
+          try {
+            var curr =
+              typeof host.__pbcAnnotationsText === "string"
+                ? host.__pbcAnnotationsText
+                : props.annotationEntries || "";
+            var res = window.prompt(
+              "Enter comments as YYYY-MM-DD|Message ; YYYY-MM-DD|Message",
+              curr || ""
+            );
+            if (res !== null) {
+              host.__pbcAnnotationsText = res;
+              if (host.__pbcConfig)
+                host.__pbcConfig.annotations = parseAnnotationEntries(res);
+              queueRenders(host);
+            }
+          } catch (e) {
+            /* ignore */
+          }
+        },
         onBandToggle: function () {
           var curr = host.__pbcConfig.bandMode;
-          host.__pbcConfig.bandMode = curr === "minmax" ? "stddev" : "minmax";
+          var next =
+            curr === "minmax"
+              ? "stddev"
+              : curr === "stddev"
+                ? "regression"
+                : "minmax";
+          host.__pbcConfig.bandMode = next;
+          queueRenders(host);
+        },
+        onThemeToggle: function () {
+          host.__pbcTheme = host.__pbcTheme === "light" ? "dark" : "light";
+          if (host.__pbcConfig) host.__pbcConfig.theme = host.__pbcTheme;
+          queueRenders(host);
+        },
+        onMenuToggle: function () {
+          host.__pbcMenuOpen = !host.__pbcMenuOpen;
+          if (host.__pbcConfig) host.__pbcConfig.menuOpen = host.__pbcMenuOpen;
+          queueRenders(host);
+        },
+        onSelectViewMode: function (mode) {
+          host.__pbcViewMode = mode === "table" ? "table" : "chart";
+          host.__pbcMenuOpen = false;
+          if (host.__pbcConfig) {
+            host.__pbcConfig.viewMode = host.__pbcViewMode;
+            host.__pbcConfig.menuOpen = false;
+          }
+          queueRenders(host);
+        },
+        onZoom: function (direction, anchorRatio) {
+          var currZoom = Number.isFinite(host.__pbcZoomScale)
+            ? host.__pbcZoomScale
+            : 1;
+          var factor = direction > 0 ? 1.2 : 1 / 1.2;
+          var nextZoom = Math.max(0.35, Math.min(8, currZoom * factor));
+          if (Math.abs(nextZoom - currZoom) < 0.001) return;
+          host.__pbcZoomScale = nextZoom;
+          host.__pbcZoomAnchor =
+            anchorRatio && typeof anchorRatio === "object" ? anchorRatio : null;
+          if (host.__pbcConfig) host.__pbcConfig.zoomScale = nextZoom;
+          if (host.__pbcConfig)
+            host.__pbcConfig.zoomAnchor = host.__pbcZoomAnchor;
           queueRenders(host);
         },
         onFilter: function (val) {
           host.__pbcFilterMin = Number.isFinite(val) ? val : undefined;
-          if (host.__pbcConfig) host.__pbcConfig.filterMin = host.__pbcFilterMin;
+          if (host.__pbcConfig)
+            host.__pbcConfig.filterMin = host.__pbcFilterMin;
           queueRenders(host);
-        },
-        onFullscreen: function (entering) {
-          // After toggling, let the CSS transition settle, then re-measure
-          setTimeout(function () {
-            var shell = host.querySelector(".pbc-shell");
-            if (shell && entering) {
-              host.__pbcConfig.containerWidth  = window.innerWidth;
-              host.__pbcConfig.containerHeight = window.innerHeight;
-            } else {
-              var r = host.getBoundingClientRect();
-              host.__pbcConfig.containerWidth  = Math.round(r.width  || host.clientWidth  || 0);
-              host.__pbcConfig.containerHeight = Math.round(r.height || host.clientHeight || 0);
-            }
-            queueRenders(host);
-          }, 50);
         }
       };
 
